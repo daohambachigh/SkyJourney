@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+const PAYMENT_TIMEOUT_MINUTES = 5; // Thời gian thanh toán (phút)
+
 const Promotionandpayment = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Thêm state này
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT_MINUTES * 60); // giây
+  const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,6 +17,24 @@ const Promotionandpayment = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Đếm ngược thời gian thanh toán
+  useEffect(() => {
+    if (!selectedPaymentMethod || expired) return;
+    setTimeLeft(PAYMENT_TIMEOUT_MINUTES * 60);
+    setExpired(false);
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [selectedPaymentMethod]);
 
   const handleNavigate = (page) => {
     setMobileMenuOpen(false);
@@ -41,7 +63,6 @@ const Promotionandpayment = () => {
     }
   };
 
-  // Thêm hàm lấy QR code
   const getQRCode = () => {
     const qrCodes = {
       "MoMo": "/assets/images/momo-qr.png",
@@ -50,6 +71,13 @@ const Promotionandpayment = () => {
       "Mastercard": "/assets/images/mastercard-qr.png"
     };
     return qrCodes[selectedPaymentMethod] || "";
+  };
+
+  // Format mm:ss
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
   };
 
   return (
@@ -373,6 +401,9 @@ const Promotionandpayment = () => {
               {selectedPaymentMethod && (
                 <div className="qr-code-section">
                   <h3 className="qr-title">Scan QR Code to Pay</h3>
+                  <div className="qr-timer">
+                    Thời gian còn lại để thanh toán: <span style={{ color: "#e0b100", fontWeight: 700 }}>{formatTime(timeLeft)}</span>
+                  </div>
                   <div className="qr-container">
                     <img
                       src={getQRCode()}
@@ -383,11 +414,27 @@ const Promotionandpayment = () => {
                   <p className="qr-instruction">
                     Open your {selectedPaymentMethod} app and scan this QR code to complete the payment
                   </p>
+                  {expired && (
+                    <div className="qr-expired">
+                      <span style={{ color: "red", fontWeight: 600 }}>Giao dịch đã hết hạn. Vui lòng tạo lại thanh toán!</span>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="form-row" style={{ justifyContent: "flex-end", gap: 16 }}>
                 <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Back</button>
-                <button type="submit" className="btn-primary">Pay now</button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    if (!expired) {
+                      navigate("/payment-confirm");
+                    }
+                  }}
+                  disabled={expired}
+                >
+                  Thanh toán thành công
+                </button>
               </div>
             </form>
           </div>
@@ -809,6 +856,14 @@ const Promotionandpayment = () => {
           border-top: 2px solid #e0b100;
           padding-top: 12px;
           margin-top: 8px;
+        }
+        .qr-timer {
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+        .qr-expired {
+          margin-top: 12px;
+          font-size: 16px;
         }
         @media (max-width: 1100px) {
           .main-content-container {
