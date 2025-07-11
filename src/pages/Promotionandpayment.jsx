@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const Promotionandpayment = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Thêm state này
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +39,17 @@ const Promotionandpayment = () => {
         navigate("/");
         break;
     }
+  };
+
+  // Thêm hàm lấy QR code
+  const getQRCode = () => {
+    const qrCodes = {
+      "MoMo": "/assets/images/momo-qr.png",
+      "ZaloPay": "/assets/images/zalopay-qr.png",
+      "Visa": "/assets/images/visa-qr.png",
+      "Mastercard": "/assets/images/mastercard-qr.png"
+    };
+    return qrCodes[selectedPaymentMethod] || "";
   };
 
   return (
@@ -326,19 +338,53 @@ const Promotionandpayment = () => {
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Payment method</label>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                    <button type="button" className="btn-payment-method">MoMo</button>
-                    <button type="button" className="btn-payment-method">ZaloPay</button>
-                    <button type="button" className="btn-payment-method">Visa</button>
-                    <button type="button" className="btn-payment-method">Mastercard</button>
+                    <button
+                      type="button"
+                      className={`btn-payment-method${selectedPaymentMethod === "MoMo" ? " active" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("MoMo")}
+                    >
+                      MoMo
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn-payment-method${selectedPaymentMethod === "ZaloPay" ? " active" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("ZaloPay")}
+                    >
+                      ZaloPay
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn-payment-method${selectedPaymentMethod === "Visa" ? " active" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("Visa")}
+                    >
+                      Visa
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn-payment-method${selectedPaymentMethod === "Mastercard" ? " active" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("Mastercard")}
+                    >
+                      Mastercard
+                    </button>
                   </div>
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Payment detail</label>
-                  <textarea rows={3} placeholder="Payment details..." style={{ width: "100%", borderRadius: 8, border: "1.5px solid #e0b100", padding: 12, fontSize: 16, resize: "vertical" }} />
+              {/* Hiển thị QR code khi chọn payment method */}
+              {selectedPaymentMethod && (
+                <div className="qr-code-section">
+                  <h3 className="qr-title">Scan QR Code to Pay</h3>
+                  <div className="qr-container">
+                    <img
+                      src={getQRCode()}
+                      alt={`${selectedPaymentMethod} QR Code`}
+                      className="qr-image"
+                    />
+                  </div>
+                  <p className="qr-instruction">
+                    Open your {selectedPaymentMethod} app and scan this QR code to complete the payment
+                  </p>
                 </div>
-              </div>
+              )}
               <div className="form-row" style={{ justifyContent: "flex-end", gap: 16 }}>
                 <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Back</button>
                 <button type="submit" className="btn-primary">Pay now</button>
@@ -378,6 +424,7 @@ const Promotionandpayment = () => {
                 </div>
               </div>
             </div>
+
             {/* Return Flight */}
             <div className="flight-detail-card">
               <div className="flight-header">
@@ -409,11 +456,25 @@ const Promotionandpayment = () => {
                 </div>
               </div>
             </div>
-            {/* Total */}
-            <div className="total-section">
-              <div className="total-row">
-                <span className="total-label">Total</span>
-                <span className="total-amount">441.80 USD</span>
+
+            {/* Payment Detail Section */}
+            <div className="payment-detail-card">
+              <div className="payment-header">
+                <span className="payment-label">Payment Summary</span>
+              </div>
+              <div className="payment-breakdown">
+                <div className="price-row">
+                  <span>Original Price</span>
+                  <span>441.80 USD</span>
+                </div>
+                <div className="price-row discount-row">
+                  <span>Promotion Discount</span>
+                  <span style={{ color: '#28a745' }}>-0.00 USD</span>
+                </div>
+                <div className="price-row total-row">
+                  <span style={{ fontWeight: '700', fontSize: '16px' }}>Final Amount</span>
+                  <span style={{ fontWeight: '700', fontSize: '18px', color: '#e0b100' }}>441.80 USD</span>
+                </div>
               </div>
             </div>
           </div>
@@ -714,6 +775,37 @@ const Promotionandpayment = () => {
         .total-amount {
           font-size: 20px;
           font-weight: 700;
+        }
+        .payment-detail-card {
+          background: rgba(255,255,255,0.95);
+          border-radius: 16px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+          overflow: hidden;
+          border: 2px solid #e0b100;
+        }
+        .payment-header {
+          background: #f8f9fa;
+          color: #333;
+          padding: 16px 20px;
+          border-bottom: 1px solid #e0b100;
+        }
+        .payment-label {
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+        }
+        .payment-breakdown {
+          padding: 16px 20px;
+        }
+        .discount-row {
+          border-bottom: 1px solid #eee;
+          padding-bottom: 8px;
+          margin-bottom: 8px;
+        }
+        .total-row {
+          border-top: 2px solid #e0b100;
+          padding-top: 12px;
+          margin-top: 8px;
         }
         @media (max-width: 1100px) {
           .main-content-container {
