@@ -428,7 +428,7 @@ const Promotionandpayment = () => {
                   className="btn-primary"
                   onClick={() => {
                     if (!expired) {
-                      navigate("/payment-confirm");
+                      navigate("/paymentconfirm");
                     }
                   }}
                   disabled={expired}
