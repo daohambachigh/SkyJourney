@@ -1,2132 +1,792 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Promotionandpayment = () => {
-  return (
-    <>
-      <div
-        id="_144_325__promotion_and_paymen"
-        style={{
-          position: "absolute",
-          overflow: "hidden",
-          background: "rgba(245, 245, 245, 1.00)",
-          height: "1407.0px",
-          width: "100%",
-        }}
-      >
-        <div
-          id="_144_326__Hero_Image"
-          style={{
-            position: "absolute",
-            background:
-              "linear-gradient(269.9999998102725deg, rgba(0, 0, 0, 0.00) 0.0%, rgba(0, 0, 0, 1.00) 100.0%), url(assets/images/null) 100% / cover no-repeat",
-            height: "624.00px",
-            width: "1920.00px",
-            left: "0.00px",
-            top: "-264.00px",
-          }}
-        ></div>
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 900);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const handleNavigate = (page) => {
+    setMobileMenuOpen(false);
+    switch (page) {
+      case "about":
+        navigate("/about");
+        break;
+      case "explore":
+        navigate("/explore");
+        break;
+      case "bookings":
+        navigate("/bookings");
+        break;
+      case "contact":
+        navigate("/contact");
+        break;
+      case "login":
+        navigate("/login");
+        break;
+      case "signup":
+        navigate("/signup");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
+  };
+
+  return (
+    <div className="flight-select-root">
+      <div className="flight-bg" />
+
+      {/* Top Info Bar */}
+      {!isMobile && (
+        <div className="top-info-bar">
+          <div className="info-left">
+            <span>+84 395908838</span>
+            <span style={{ marginLeft: 24 }}>bookingflight@gmail.com</span>
+          </div>
+          <div className="info-right">
+            <span className="link" onClick={() => handleNavigate("login")}>Log In</span>
+            <button className="btn-outline" onClick={() => handleNavigate("signup")}>Sign Up</button>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Bar */}
+      <nav className="nav-bar" style={isMobile ? { display: "flex", alignItems: "center", justifyContent: "space-between" } : {}}>
+        <div className="logo" onClick={() => handleNavigate("/")}>SkyJourney</div>
+        {!isMobile && (
+          <div className="nav-items">
+            <span className="link" onClick={() => handleNavigate("about")}>About</span>
+            <span className="link" onClick={() => handleNavigate("explore")}>Explore</span>
+            <span className="link" onClick={() => handleNavigate("bookings")}>Bookings</span>
+            <span className="link" onClick={() => handleNavigate("contact")}>Contact Us</span>
+          </div>
+        )}
+        {isMobile && (
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px",
+              fontSize: "28px",
+              color: "#e0b100",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: "auto"
+            }}
+          >
+            <span style={{ fontSize: "28px", fontWeight: "bold", lineHeight: 1 }}>☰</span>
+          </button>
+        )}
+      </nav>
+
+      {/* Mobile Menu Popup */}
+      {mobileMenuOpen && isMobile && (
         <div
-          id="_144_327__Top_Info_Bar"
+          className="mobile-menu-overlay"
           style={{
-            position: "absolute",
-            borderColor: "#f5f5f5ff",
-            borderStyle: "solid",
-            borderWidth: "0.0px 0.0px 1.0px 0.0px",
-            height: "31.00px",
-            width: "1680.00px",
-            left: "0.00px",
-            top: "0.00px",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "nowrap",
-            padding: "16px 120px",
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
           }}
+          onClick={() => setMobileMenuOpen(false)}
         >
           <div
-            id="_144_328__Frame_7"
+            className="mobile-menu-popup"
             style={{
-              position: "relative",
-              height: "16.00px",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "flex-start",
-              flexWrap: "nowrap",
-              gap: "40px",
+              background: '#fff',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+              padding: '32px 24px',
+              minWidth: '280px',
+              maxWidth: '90vw',
+              textAlign: 'center',
+              position: 'relative',
+              animation: 'slideIn 0.3s ease-out'
             }}
+            onClick={e => e.stopPropagation()}
           >
-            <span
-              id="_144_329___84_395908838"
+            <button
+              className="mobile-menu-close"
+              onClick={() => setMobileMenuOpen(false)}
               style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "16.00px",
-                width: "125.00px",
-                position: "relative",
+                position: 'absolute',
+                top: '12px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                fontSize: '28px',
+                color: '#999',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              aria-label="Close menu"
+            >
+              ×
+            </button>
+            <h3
+              style={{
+                color: '#e0b100',
+                fontSize: '20px',
+                fontWeight: '700',
+                margin: '0 0 24px 0',
+                letterSpacing: '0.5px'
               }}
             >
-              <span
+              MENU
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <a
+                href="#"
                 style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(245, 245, 245, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "16.0px",
-                  fontWeight: "400",
-                  lineHeight: "100.00%",
+                  display: 'block',
+                  color: '#e0b100',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: '#f0f0f0',
+                  transition: 'background-color 0.2s, color 0.2s',
+                  cursor: 'pointer'
+                }}
+                onClick={e => {
+                  e.preventDefault();
+                  handleNavigate('about');
                 }}
               >
-                +84 395908838
-              </span>
-            </span>
-            <span
-              id="_144_330__bookingflight_gmail_"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "16.00px",
-                width: "192.00px",
-                position: "relative",
-              }}
-            >
-              <span
+                About
+              </a>
+              <a
+                href="#"
                 style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(245, 245, 245, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "16.0px",
-                  fontWeight: "400",
-                  lineHeight: "100.00%",
+                  display: 'block',
+                  color: '#333',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  transition: 'background-color 0.2s, color 0.2s',
+                  cursor: 'pointer'
+                }}
+                onClick={e => {
+                  e.preventDefault();
+                  handleNavigate('explore');
                 }}
               >
-                bookingflight@gmail.com
-              </span>
-            </span>
-          </div>
-
-          <div
-            id="_144_331__Frame_6"
-            style={{
-              position: "relative",
-              height: "32.00px",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              flexWrap: "nowrap",
-              gap: "40px",
-            }}
-          >
-            <div
-              id="_144_332__Frame_4"
-              style={{
-                position: "relative",
-                height: "32.00px",
-                width: "155.00px",
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                flexWrap: "nowrap",
-                gap: "16px",
-              }}
-            >
-              <span
-                id="_144_333__Log_In"
+                Explore
+              </a>
+              <a
+                href="#"
                 style={{
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  textAlign: "left",
-                  alignItems: "flex-start",
-                  height: "16.00px",
-                  width: "47.00px",
-                  position: "relative",
+                  display: 'block',
+                  color: '#333',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  transition: 'background-color 0.2s, color 0.2s',
+                  cursor: 'pointer'
+                }}
+                onClick={e => {
+                  e.preventDefault();
+                  handleNavigate('bookings');
                 }}
               >
-                <span
+                Bookings
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: 'block',
+                  color: '#333',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  transition: 'background-color 0.2s, color 0.2s',
+                  cursor: 'pointer'
+                }}
+                onClick={e => {
+                  e.preventDefault();
+                  handleNavigate('contact');
+                }}
+              >
+                Contact Us
+              </a>
+              <div style={{ borderTop: '1px solid #eee', marginTop: 10, paddingTop: 10 }}>
+                <a
+                  href="#"
                   style={{
-                    whiteSpace: "nowrap",
-                    background: "rgba(0, 0, 0, 1.00)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    textFillColor: "transparent",
-                    WebkitTextFillColor: "transparent",
-                    fontFamily: "Inter",
-                    fontStyle: "normal",
-                    fontSize: "16.0px",
-                    fontWeight: "400",
-                    lineHeight: "100.00%",
+                    color: '#e0b100',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    padding: '12px 16px',
+                    display: 'block',
+                    cursor: 'pointer'
+                  }}
+                  onClick={e => {
+                    e.preventDefault();
+                    handleNavigate('login');
                   }}
                 >
                   Log In
-                </span>
-              </span>
-              <div
-                id="_144_334__Frame_1"
-                style={{
-                  position: "relative",
-                  borderColor: "#e0b100ff",
-                  borderStyle: "solid",
-                  borderWidth: "1px",
-                  borderRadius: "40px",
-                  height: "14.00px",
-                  width: "58.00px",
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "flex-start",
-                  alignItems: "flex-start",
-                  flexWrap: "nowrap",
-                  gap: "8px",
-                  padding: "8px 16px",
-                }}
-              >
-                <span
-                  id="_144_335__Sign_Up"
+                </a>
+                <button
                   style={{
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    textAlign: "left",
-                    alignItems: "flex-start",
-                    height: "16.00px",
-                    width: "60.00px",
-                    position: "relative",
+                    marginTop: 12,
+                    width: '80%',
+                    background: '#e0b100',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
                   }}
+                  onClick={() => handleNavigate('signup')}
                 >
-                  <span
-                    style={{
-                      whiteSpace: "nowrap",
-                      background: "rgba(0, 0, 0, 1.00)",
-                      backgroundClip: "text",
-                      WebkitBackgroundClip: "text",
-                      textFillColor: "transparent",
-                      WebkitTextFillColor: "transparent",
-                      fontFamily: "Inter",
-                      fontStyle: "normal",
-                      fontSize: "16.0px",
-                      fontWeight: "400",
-                      lineHeight: "100.00%",
-                    }}
-                  >
-                    Sign Up
-                  </span>
-                </span>
+                  Sign Up
+                </button>
+              </div>
+            </div>
+            <style>{`
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: scale(0.9);
+                }
+                to {
+                  opacity: 1;
+                  transform: scale(1);
+                }
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flight-content">
+        <div className="flight-summary">
+          <div className="flight-route">
+            <span className="flight-title">HAN - ICN</span>
+            <span className="flight-type">Round trip</span>
+          </div>
+          <div className="flight-date">Tue, July 8, 2025 - Sat, July 19, 2025</div>
+          <div className="flight-passenger">1 Adult</div>
+          <div className="flight-class">Economy</div>
+        </div>
+        <div className="main-content-container">
+          {/* Left side - Promotion and Payment form */}
+          <div className="flight-section" style={{ flex: 1 }}>
+            <h2 className="section-title">Promotion & Payment</h2>
+            <form className="promotion-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Promotion code / Voucher</label>
+                  <input type="text" placeholder="Enter code" />
+                </div>
+                <div className="form-group" style={{ alignSelf: "flex-end" }}>
+                  <button type="button" className="btn-primary" style={{ minWidth: 120 }}>Apply</button>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Payment method</label>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    <button type="button" className="btn-payment-method">MoMo</button>
+                    <button type="button" className="btn-payment-method">ZaloPay</button>
+                    <button type="button" className="btn-payment-method">Visa</button>
+                    <button type="button" className="btn-payment-method">Mastercard</button>
+                  </div>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Payment detail</label>
+                  <textarea rows={3} placeholder="Payment details..." style={{ width: "100%", borderRadius: 8, border: "1.5px solid #e0b100", padding: 12, fontSize: 16, resize: "vertical" }} />
+                </div>
+              </div>
+              <div className="form-row" style={{ justifyContent: "flex-end", gap: 16 }}>
+                <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Back</button>
+                <button type="submit" className="btn-primary">Pay now</button>
+              </div>
+            </form>
+          </div>
+          {/* Right side - Flight Details & Pricing */}
+          <div className="pricing-sidebar">
+            {/* Departure Flight */}
+            <div className="flight-detail-card">
+              <div className="flight-header">
+                <span className="flight-label">Departure flight</span>
+                <span className="flight-price">220.90 USD</span>
+              </div>
+              <div className="flight-info">
+                <div className="route-info">
+                  <span className="airport-code">Hanoi (HAN)</span>
+                  <span className="arrow">→</span>
+                  <span className="airport-code">Incheon/Seoul (ICN)</span>
+                </div>
+                <div className="flight-time">
+                  <span>Tue, 08/07/2025 | 12:00 - 18:25 | KE123 | Eco</span>
+                </div>
+              </div>
+              <div className="price-breakdown">
+                <div className="price-row">
+                  <span>Price</span>
+                  <span>105.00 USD</span>
+                </div>
+                <div className="price-row">
+                  <span>Taxes and fees</span>
+                  <span>115.90 USD</span>
+                </div>
+                <div className="price-row">
+                  <span>Add-on</span>
+                  <span>0 USD</span>
+                </div>
+              </div>
+            </div>
+            {/* Return Flight */}
+            <div className="flight-detail-card">
+              <div className="flight-header">
+                <span className="flight-label">Return flight</span>
+                <span className="flight-price">220.90 USD</span>
+              </div>
+              <div className="flight-info">
+                <div className="route-info">
+                  <span className="airport-code">Incheon/Seoul (ICN)</span>
+                  <span className="arrow">→</span>
+                  <span className="airport-code">Hanoi (HAN)</span>
+                </div>
+                <div className="flight-time">
+                  <span>Sat, 19/07/2025 | 12:00 - 18:25 | KE456 | Eco</span>
+                </div>
+              </div>
+              <div className="price-breakdown">
+                <div className="price-row">
+                  <span>Price</span>
+                  <span>105.00 USD</span>
+                </div>
+                <div className="price-row">
+                  <span>Taxes and fees</span>
+                  <span>115.90 USD</span>
+                </div>
+                <div className="price-row">
+                  <span>Add-on</span>
+                  <span>0 USD</span>
+                </div>
+              </div>
+            </div>
+            {/* Total */}
+            <div className="total-section">
+              <div className="total-row">
+                <span className="total-label">Total</span>
+                <span className="total-amount">441.80 USD</span>
               </div>
             </div>
           </div>
         </div>
-
-        <div
-          id="_144_336__Nav_Bar"
-          style={{
-            position: "absolute",
-            height: "40.00px",
-            width: "1680.00px",
-            left: "0.00px",
-            top: "64.00px",
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "nowrap",
-            padding: "24px 120px",
-          }}
-        >
-          <div
-            id="_144_337__Logo"
-            style={{
-              position: "relative",
-              height: "40.00px",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              flexWrap: "nowrap",
-              gap: "8px",
-            }}
-          >
-            <span
-              id="_144_338__Logo_here"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "40.00px",
-                width: "116.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(224, 177, 0, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "24.0px",
-                  fontWeight: "600",
-                  lineHeight: "40.00px",
-                }}
-              >
-                Logo here
-              </span>
-            </span>
-          </div>
-
-          <div
-            id="_144_339__Nav_Items"
-            style={{
-              position: "relative",
-              height: "18.00px",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              flexWrap: "nowrap",
-              gap: "40px",
-            }}
-          >
-            <span
-              id="_144_340__About"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "18.00px",
-                width: "54.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(0, 0, 0, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "18.0px",
-                  fontWeight: "600",
-                  lineHeight: "100.00%",
-                }}
-              >
-                About
-              </span>
-            </span>
-            <span
-              id="_144_341__Explore"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "18.00px",
-                width: "66.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(0, 0, 0, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "18.0px",
-                  fontWeight: "600",
-                  lineHeight: "100.00%",
-                }}
-              >
-                Explore
-              </span>
-            </span>
-            <span
-              id="_144_342__Bookings"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "18.00px",
-                width: "81.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(0, 0, 0, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "18.0px",
-                  fontWeight: "600",
-                  lineHeight: "100.00%",
-                }}
-              >
-                Bookings
-              </span>
-            </span>
-            <span
-              id="_144_343__Contact_Us"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "18.00px",
-                width: "98.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(0, 0, 0, 1.00)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "18.0px",
-                  fontWeight: "600",
-                  lineHeight: "100.00%",
-                }}
-              >
-                Contact Us
-              </span>
-            </span>
-          </div>
-        </div>
-
-        <div
-          id="_144_345__Rectangle_5"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "20px",
-            height: "90.00px",
-            width: "1494.00px",
-            left: "213.00px",
-            top: "182.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_346__HAN_-_ICN_Round_trip"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "90.00px",
-            width: "294.00px",
-            position: "absolute",
-            left: "228.00px",
-            top: "182.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "32.0px",
-                fontWeight: "700",
-                lineHeight: "100.00%",
-              }}
-            >
-              HAN - ICN
-              <br />
-            </span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "14.0px",
-                fontWeight: "300",
-                lineHeight: "100.00%",
-              }}
-            >
-              Round trip
-            </span>
-          </span>
-        </span>
-        <img
-          id="_144_347__Line_1"
-          src="assets/images/line_1_3.svg"
-          alt="Line_1"
-          style={{
-            position: "absolute",
-            transform: "rotate(-90.00deg) scale(-1.0, -1.0)",
-            transformOrigin: "0 0",
-            left: "500.00px",
-            top: "201.00px",
-          }}
-        />
-        <img
-          id="_144_348__Line_2"
-          src="assets/images/line_2_3.svg"
-          alt="Line_2"
-          style={{
-            position: "absolute",
-            transform: "rotate(-90.00deg) scale(-1.0, -1.0)",
-            transformOrigin: "0 0",
-            left: "1205.00px",
-            top: "199.00px",
-          }}
-        />
-        <img
-          id="_144_349__Line_3"
-          src="assets/images/line_3_3.svg"
-          alt="Line_3"
-          style={{
-            position: "absolute",
-            transform: "rotate(-90.00deg) scale(-1.0, -1.0)",
-            transformOrigin: "0 0",
-            left: "1435.00px",
-            top: "199.00px",
-          }}
-        />
-        <span
-          id="_144_350__Tue__July_8__2025_-_"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "90.00px",
-            width: "592.00px",
-            position: "absolute",
-            left: "557.00px",
-            top: "182.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "32.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Tue, July 8, 2025 - Sat, July 19, 2025
-          </span>
-        </span>
-        <span
-          id="_144_351__1_Adult"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "90.00px",
-            width: "145.00px",
-            position: "absolute",
-            left: "1255.00px",
-            top: "182.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "32.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            1 Adult
-          </span>
-        </span>
-        <span
-          id="_144_352__Economy"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "90.00px",
-            width: "145.00px",
-            position: "absolute",
-            left: "1500.00px",
-            top: "182.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "32.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Economy
-          </span>
-        </span>
-
-        <div
-          id="_144_365__Rectangle_20"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "20px",
-            height: "759.00px",
-            width: "1284.00px",
-            left: "71.00px",
-            top: "469.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_354__Promotion"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "59.00px",
-            width: "259.00px",
-            position: "absolute",
-            left: "129.00px",
-            top: "469.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "24.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Promotion
-          </span>
-        </span>
-        <div
-          id="_144_523__Rectangle_21"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderColor: "#000000ff",
-            borderStyle: "solid",
-            borderWidth: "1px",
-            borderRadius: "5px",
-            height: "18.00px",
-            width: "18.00px",
-            left: "103.00px",
-            top: "489.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_524___Pngtree_vector_tick"
-          style={{
-            position: "absolute",
-            background:
-              "url(assets/images/pngtreevector_tick_icon_4184104_1.png) 100% / cover no-repeat",
-            height: "20.00px",
-            width: "20.00px",
-            left: "103.00px",
-            top: "489.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_533__Rectangle_19"
-          style={{
-            position: "absolute",
-            background: "rgba(224, 177, 0, 1.00)",
-            borderRadius: "10px",
-            height: "48.00px",
-            width: "130.00px",
-            left: "103.00px",
-            top: "593.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_534__Confirm"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "48.00px",
-            width: "130.00px",
-            position: "absolute",
-            left: "103.00px",
-            top: "593.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255, 255, 255, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Confirm
-          </span>
-        </span>
-
-        <div
-          id="_144_527__firstname"
-          style={{
-            position: "absolute",
-            height: "83.00px",
-            width: "594.00px",
-            left: "103.00px",
-            top: "534.00px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "flex-start",
-            flexWrap: "nowrap",
-            gap: "8px",
-          }}
-        >
-          <div
-            id="_144_528__Frame_76"
-            style={{
-              position: "relative",
-              borderColor: "#000000ff",
-              borderStyle: "solid",
-              borderWidth: "0.0px 0.0px 1.0px 0.0px",
-              width: "calc(100% - 0px - 0px)",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              flexWrap: "nowrap",
-              gap: "16px",
-              padding: "12px 0px",
-            }}
-          >
-            <span
-              id="_144_529__Code"
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                alignItems: "flex-start",
-                height: "24.00px",
-                width: "594.00px",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  whiteSpace: "nowrap",
-                  background: "rgba(0, 0, 0, 0.50)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  textFillColor: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  fontFamily: "Inter",
-                  fontStyle: "normal",
-                  fontSize: "20.0px",
-                  fontWeight: "400",
-                  lineHeight: "24.00px",
-                }}
-              >
-                Code
-              </span>
-            </span>
-          </div>
-        </div>
-
-        <span
-          id="_144_536__Payment_method_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "59.00px",
-            width: "259.00px",
-            position: "absolute",
-            left: "103.00px",
-            top: "666.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "24.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Payment method:&nbsp;
-          </span>
-        </span>
-        <div
-          id="_144_538__MoMo_Logo_1"
-          style={{
-            position: "absolute",
-            background:
-              "url(assets/images/momo_logo_1.png) 100% / cover no-repeat",
-            height: "182.00px",
-            width: "182.00px",
-            left: "103.00px",
-            top: "726.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_539__MoMo_Logo_2"
-          style={{
-            position: "absolute",
-            background: "url(assets/images/null) 100% / cover no-repeat",
-            height: "182.00px",
-            width: "182.00px",
-            left: "323.00px",
-            top: "726.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_541__MoMo_Logo_3"
-          style={{
-            position: "absolute",
-            background: "url(assets/images/null) 100% / cover no-repeat",
-            height: "182.00px",
-            width: "182.00px",
-            left: "543.00px",
-            top: "726.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_543__MoMo_Logo_4"
-          style={{
-            position: "absolute",
-            background: "url(assets/images/null) 100% / cover no-repeat",
-            height: "182.00px",
-            width: "182.00px",
-            left: "763.00px",
-            top: "726.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_545__Payment_detail_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "59.00px",
-            width: "259.00px",
-            position: "absolute",
-            left: "103.00px",
-            top: "933.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "24.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Payment detail:&nbsp;
-          </span>
-        </span>
-        <div
-          id="_144_552__Rectangle_22"
-          style={{
-            position: "absolute",
-            background: "rgba(197, 197, 197, 1.00)",
-            borderRadius: "10px",
-            height: "123.00px",
-            width: "1156.00px",
-            left: "112.00px",
-            top: "999.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_548__Value__Promotion_cod"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "100.00px",
-            width: "304.00px",
-            position: "absolute",
-            left: "123.00px",
-            top: "1006.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "24.0px",
-                fontWeight: "400",
-                lineHeight: "100.00%",
-              }}
-            >
-              Value: <br />
-              Promotion code/Voucher:
-              <br />
-              <br />
-            </span>
-            <span
-              style={{
-                background: "rgba(141, 47, 66, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "24.0px",
-                fontWeight: "400",
-                lineHeight: "100.00%",
-              }}
-            >
-              Total value:
-            </span>
-          </span>
-        </span>
-        <span
-          id="_144_549__0_USD_0_USD_0_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "100.00px",
-            width: "304.00px",
-            position: "absolute",
-            left: "957.00px",
-            top: "1006.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "24.0px",
-                fontWeight: "400",
-                lineHeight: "100.00%",
-              }}
-            >
-              0 USD
-              <br />0 USD
-              <br />
-              <br />
-            </span>
-            <span
-              style={{
-                background: "rgba(141, 47, 66, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "24.0px",
-                fontWeight: "400",
-                lineHeight: "100.00%",
-              }}
-            >
-              0 USD
-            </span>
-          </span>
-        </span>
-        <img
-          id="_144_551__Line_8"
-          src="assets/images/line_8.svg"
-          alt="Line_8"
-          style={{ position: "absolute", left: "123.00px", top: "1069.00px" }}
-        />
-
-        <div
-          id="_144_461__Rectangle_18"
-          style={{
-            position: "absolute",
-            background: "rgba(174, 174, 174, 1.00)",
-            height: "93.00px",
-            width: "1920.00px",
-            left: "0.00px",
-            top: "1314.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_463__Rectangle_19"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "48.00px",
-            width: "198.00px",
-            left: "104.00px",
-            top: "1337.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_464__Back"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "48.00px",
-            width: "198.00px",
-            position: "absolute",
-            left: "104.00px",
-            top: "1337.00px",
-          }}
-        >
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              background: "rgba(0, 0, 0, 0.50)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "32.0px",
-              fontWeight: "700",
-              lineHeight: "100.00%",
-            }}
-          >
-            Back
-          </span>
-        </span>
-
-        <div
-          id="_144_466__Rectangle_19"
-          style={{
-            position: "absolute",
-            background: "rgba(224, 177, 0, 1.00)",
-            borderRadius: "10px",
-            height: "48.00px",
-            width: "198.00px",
-            left: "1625.00px",
-            top: "1337.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_467__Paynow"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            alignItems: "center",
-            height: "48.00px",
-            width: "198.00px",
-            position: "absolute",
-            left: "1625.00px",
-            top: "1337.00px",
-          }}
-        >
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              background: "rgba(255, 255, 255, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "32.0px",
-              fontWeight: "700",
-              lineHeight: "100.00%",
-            }}
-          >
-            Paynow
-          </span>
-        </span>
-
-        <div
-          id="_144_411__Rectangle_16"
-          style={{
-            position: "absolute",
-            background: "rgba(174, 174, 174, 1.00)",
-            borderRadius: "20px",
-            height: "247.00px",
-            width: "497.00px",
-            left: "1392.00px",
-            top: "559.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_413__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1405.00px",
-            top: "748.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_414__0_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1662.00px",
-            top: "748.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            0 USD
-          </span>
-        </span>
-        <span
-          id="_144_415__Add-on"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1419.00px",
-            top: "748.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Add-on
-          </span>
-        </span>
-
-        <div
-          id="_144_417__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1405.00px",
-            top: "689.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_418__115_90_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1662.00px",
-            top: "689.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            115.90 USD
-          </span>
-        </span>
-        <span
-          id="_144_419__Taxes_and_fees"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1419.00px",
-            top: "689.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Taxes and fees
-          </span>
-        </span>
-
-        <div
-          id="_144_421__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1405.00px",
-            top: "626.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_422__105_00_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1662.00px",
-            top: "626.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            105.00 USD
-          </span>
-        </span>
-        <span
-          id="_144_423__Price"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1419.00px",
-            top: "626.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Price
-          </span>
-        </span>
-
-        <span
-          id="_144_425__Hanoi__HAN_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "123.00px",
-            position: "absolute",
-            left: "1405.00px",
-            top: "562.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            Hanoi (HAN)
-          </span>
-        </span>
-        <span
-          id="_144_426__Incheon_Seoul__ICN_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "199.00px",
-            position: "absolute",
-            left: "1562.00px",
-            top: "562.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            Incheon/Seoul (ICN)
-          </span>
-        </span>
-        <div
-          id="_144_427__favpng_e77f6a100f579"
-          style={{
-            position: "absolute",
-            background: "url(assets/images/null) 100% / cover no-repeat",
-            transform: "rotate(45.00deg)",
-            transformOrigin: "0 0",
-            height: "20.00px",
-            width: "20.00px",
-            left: "1542.14px",
-            top: "570.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_428__Tue__08_07_2025___12"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "24.00px",
-            width: "465.00px",
-            position: "absolute",
-            left: "1405.00px",
-            top: "594.00px",
-          }}
-        >
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "14.0px",
-              fontWeight: "200",
-              lineHeight: "100.00%",
-            }}
-          >
-            Tue, 08/07/2025 | 12:20 - 18:25 | KE123 | Eco&nbsp;&nbsp;
-          </span>
-        </span>
-
-        <div
-          id="_144_430__Rectangle_15"
-          style={{
-            position: "absolute",
-            background: "rgba(224, 177, 0, 1.00)",
-            borderRadius: "15px",
-            height: "76.00px",
-            width: "497.00px",
-            left: "1392.00px",
-            top: "469.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_431__Departure_flight"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "168.00px",
-            position: "absolute",
-            left: "1405.00px",
-            top: "485.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255, 255, 255, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Departure flight&nbsp;
-          </span>
-        </span>
-        <span
-          id="_144_432__220_90_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "42.00px",
-            width: "245.00px",
-            position: "absolute",
-            left: "1625.00px",
-            top: "485.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(87, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              220.90 USD
-            </span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              &nbsp;
-            </span>
-          </span>
-        </span>
-
-        <div
-          id="_144_434__Rectangle_16"
-          style={{
-            position: "absolute",
-            background: "rgba(174, 174, 174, 1.00)",
-            borderRadius: "20px",
-            height: "247.00px",
-            width: "497.00px",
-            left: "1396.00px",
-            top: "927.00px",
-          }}
-        ></div>
-
-        <div
-          id="_144_436__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1409.00px",
-            top: "1116.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_437__0_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1666.00px",
-            top: "1116.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            0 USD
-          </span>
-        </span>
-        <span
-          id="_144_438__Add-on"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1423.00px",
-            top: "1116.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Add-on
-          </span>
-        </span>
-
-        <div
-          id="_144_440__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1409.00px",
-            top: "1057.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_441__115_90_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1666.00px",
-            top: "1057.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            115.90 USD
-          </span>
-        </span>
-        <span
-          id="_144_442__Taxes_and_fees"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1423.00px",
-            top: "1057.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Taxes and fees
-          </span>
-        </span>
-
-        <div
-          id="_144_444__Rectangle_17"
-          style={{
-            position: "absolute",
-            background: "rgba(217, 217, 217, 1.00)",
-            borderRadius: "10px",
-            height: "46.00px",
-            width: "465.00px",
-            left: "1409.00px",
-            top: "994.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_445__105_00_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1666.00px",
-            top: "994.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            105.00 USD
-          </span>
-        </span>
-        <span
-          id="_144_446__Price"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "46.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1423.00px",
-            top: "994.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "300",
-              lineHeight: "100.00%",
-            }}
-          >
-            Price
-          </span>
-        </span>
-
-        <span
-          id="_144_448__Incheon_Seoul__ICN_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "193.00px",
-            position: "absolute",
-            left: "1409.00px",
-            top: "930.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            Incheon/Seoul (ICN)
-          </span>
-        </span>
-        <span
-          id="_144_449__Hanoi__HAN_"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "199.00px",
-            position: "absolute",
-            left: "1636.00px",
-            top: "930.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "400",
-              lineHeight: "100.00%",
-            }}
-          >
-            Hanoi (HAN)
-          </span>
-        </span>
-        <div
-          id="_144_450__favpng_e77f6a100f579"
-          style={{
-            position: "absolute",
-            background: "url(assets/images/null) 100% / cover no-repeat",
-            transform: "rotate(45.00deg)",
-            transformOrigin: "0 0",
-            height: "20.00px",
-            width: "20.00px",
-            left: "1616.14px",
-            top: "938.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_451__Sat__19_07_2025___12"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "24.00px",
-            width: "465.00px",
-            position: "absolute",
-            left: "1409.00px",
-            top: "962.00px",
-          }}
-        >
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              background: "rgba(0, 0, 0, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "14.0px",
-              fontWeight: "200",
-              lineHeight: "100.00%",
-            }}
-          >
-            Sat, 19/07/2025 | 12:20 - 18:25 | KE456 | Eco&nbsp;&nbsp;
-          </span>
-        </span>
-
-        <div
-          id="_144_453__Rectangle_15"
-          style={{
-            position: "absolute",
-            background: "rgba(224, 177, 0, 1.00)",
-            borderRadius: "15px",
-            height: "76.00px",
-            width: "497.00px",
-            left: "1396.00px",
-            top: "837.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_454__Return_flight"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "168.00px",
-            position: "absolute",
-            left: "1409.00px",
-            top: "853.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255, 255, 255, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Return flight&nbsp;
-          </span>
-        </span>
-        <span
-          id="_144_455__220_90_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "42.00px",
-            width: "245.00px",
-            position: "absolute",
-            left: "1629.00px",
-            top: "853.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(87, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              220.90 USD
-            </span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              &nbsp;
-            </span>
-          </span>
-        </span>
-
-        <div
-          id="_144_457__Rectangle_15"
-          style={{
-            position: "absolute",
-            background: "rgba(87, 0, 0, 1.00)",
-            borderRadius: "15px",
-            height: "76.00px",
-            width: "497.00px",
-            left: "1398.00px",
-            top: "1187.00px",
-          }}
-        ></div>
-
-        <span
-          id="_144_458__Total"
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            alignItems: "center",
-            height: "44.00px",
-            width: "168.00px",
-            position: "absolute",
-            left: "1411.00px",
-            top: "1203.00px",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255, 255, 255, 1.00)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              textFillColor: "transparent",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "Inter",
-              fontStyle: "normal",
-              fontSize: "20.0px",
-              fontWeight: "500",
-              lineHeight: "100.00%",
-            }}
-          >
-            Total
-          </span>
-        </span>
-        <span
-          id="_144_459__441_80_USD"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            textAlign: "right",
-            alignItems: "center",
-            height: "42.00px",
-            width: "245.00px",
-            position: "absolute",
-            left: "1631.00px",
-            top: "1203.00px",
-          }}
-        >
-          <span>
-            <span
-              style={{
-                background: "rgba(255, 255, 255, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              441.80 USD
-            </span>
-            <span
-              style={{
-                background: "rgba(0, 0, 0, 1.00)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                textFillColor: "transparent",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "Inter",
-                fontStyle: "normal",
-                fontSize: "20.0px",
-                fontWeight: "500",
-                lineHeight: "100.00%",
-              }}
-            >
-              &nbsp;
-            </span>
-          </span>
-        </span>
       </div>
-    </>
+      <style>{`
+        .flight-select-root {
+          min-height: 100vh;
+          position: relative;
+          overflow-x: hidden;
+          background: #f5f7fa;
+        }
+        .flight-bg {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          width: 100%;
+          height: 350px;
+          background: linear-gradient(270deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%), 
+                     url('assets/images/hero_image.png') center/cover no-repeat;
+          z-index: 0;
+        }
+        .top-info-bar {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 48px;
+          background: #fff;
+          border-bottom: 1px solid #eee;
+          font-size: 15px;
+        }
+        .info-left span {
+          color: #666;
+          font-size: 14px;
+        }
+        .info-right {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .link {
+          color: #e0b100;
+          font-weight: 600;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        .btn-outline {
+          border: 1px solid #e0b100;
+          background: transparent;
+          color: #666;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          cursor: pointer;
+          margin-left: 8px;
+          transition: all 0.2s;
+        }
+        .btn-outline:hover {
+          background: #e0b100;
+          color: #fff;
+        }
+        .btn-primary {
+          background: #e0b100;
+          color: #fff;
+          font-weight: 600;
+          border: none;
+          border-radius: 24px;
+          padding: 12px 36px;
+          cursor: pointer;
+          font-size: 18px;
+          transition: all 0.2s;
+        }
+        .btn-primary:hover {
+          background: #c09600;
+          color: #fff;
+        }
+        .nav-bar {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 24px 48px;
+          background: #fff;
+          border-bottom: 1px solid #eee;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo {
+          color: #e0b100;
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          cursor: pointer;
+        }
+        .nav-items {
+          display: flex;
+          gap: 32px;
+        }
+        .flight-content {
+          position: relative;
+          z-index: 1;
+          margin: 40px auto 80px auto;
+          max-width: 1200px;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+        }
+        .flight-summary {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          background: rgba(255,255,255,0.95);
+          border-radius: 16px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+          padding: 24px 32px;
+          align-items: center;
+        }
+        .flight-route {
+          display: flex;
+          flex-direction: column;
+          min-width: 160px;
+        }
+        .flight-title {
+          font-size: 32px;
+          font-weight: 700;
+          color: #222;
+          letter-spacing: -0.5px;
+        }
+        .flight-type {
+          font-size: 14px;
+          color: #888;
+        }
+        .flight-date, .flight-passenger, .flight-class {
+          font-size: 18px;
+          color: #222;
+          font-weight: 500;
+        }
+        .main-content-container {
+          display: flex;
+          gap: 32px;
+          align-items: flex-start;
+        }
+        .flight-section {
+          background: rgba(255,255,255,0.95);
+          border-radius: 16px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+          padding: 24px 32px;
+          width: 100%;
+        }
+        .section-title {
+          font-size: 20px;
+          font-weight: 600;
+          color: #222;
+          margin-bottom: 20px;
+          text-align: left;
+        }
+        .promotion-form {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+        .form-row {
+          display: flex;
+          gap: 24px;
+          width: 100%;
+          align-items: flex-end;
+        }
+        .form-group {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+        .form-group label {
+          color: #222;
+          font-weight: 600;
+          font-size: 16px;
+          margin-bottom: 8px;
+          display: block;
+          text-align: left;
+          line-height: 1.4;
+        }
+        .form-group input, .form-group textarea {
+          width: 100%;
+          padding: 12px 16px;
+          border-radius: 8px;
+          border: 1.5px solid #e0b100;
+          background: #fff;
+          color: #222;
+          font-size: 16px;
+          outline: none;
+          box-shadow: none;
+          transition: border-color 0.2s;
+          box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+          border-color: #c09600;
+        }
+        .btn-payment-method {
+          background: #fff;
+          color: #e0b100;
+          border: 1.5px solid #e0b100;
+          border-radius: 16px;
+          padding: 10px 28px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-payment-method:hover, .btn-payment-method.active {
+          background: #e0b100;
+          color: #fff;
+        }
+        .pricing-sidebar {
+          min-width: 320px;
+          width: 320px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .flight-detail-card {
+          background: rgba(255,255,255,0.95);
+          border-radius: 16px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+          overflow: hidden;
+        }
+        .flight-header {
+          background: #e0b100;
+          color: #fff;
+          padding: 16px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .flight-label {
+          font-size: 16px;
+          font-weight: 600;
+        }
+        .flight-price {
+          font-size: 18px;
+          font-weight: 700;
+        }
+        .flight-info {
+          padding: 16px 20px;
+          border-bottom: 1px solid #eee;
+        }
+        .route-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+        .airport-code {
+          font-size: 14px;
+          font-weight: 600;
+          color: #222;
+        }
+        .arrow {
+          color: #e0b100;
+          font-weight: bold;
+        }
+        .flight-time {
+          font-size: 12px;
+          color: #666;
+        }
+        .price-breakdown {
+          padding: 16px 20px;
+        }
+        .price-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+          font-size: 14px;
+          color: #666;
+        }
+        .price-row:last-child {
+          margin-bottom: 0;
+        }
+        .total-section {
+          background: #8b0000;
+          color: #fff;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .total-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .total-label {
+          font-size: 18px;
+          font-weight: 600;
+        }
+        .total-amount {
+          font-size: 20px;
+          font-weight: 700;
+        }
+        @media (max-width: 1100px) {
+          .main-content-container {
+            flex-direction: column;
+            gap: 24px;
+          }
+          .pricing-sidebar {
+            width: 100%;
+            min-width: auto;
+          }
+        }
+        @media (max-width: 900px) {
+          .top-info-bar, .nav-bar {
+            padding: 12px 16px;
+          }
+          .nav-items {
+            gap: 18px;
+          }
+          .flight-content {
+            padding: 12px;
+          }
+          .flight-summary, .flight-section {
+            padding: 16px;
+          }
+          .form-row {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+          }
+          .main-content-container {
+            gap: 16px;
+          }
+        }
+        @media (max-width: 600px) {
+          .flight-content {
+            margin-top: 16px;
+            padding: 4px;
+          }
+          .flight-bg {
+            height: 180px;
+          }
+          .flight-summary {
+            gap: 10px;
+            padding: 10px;
+          }
+          .flight-title {
+            font-size: 20px;
+          }
+          .flight-date, .flight-passenger, .flight-class {
+            font-size: 16px;
+          }
+          .section-title {
+            font-size: 18px;
+          }
+          .form-row {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+          }
+          .form-group label {
+            font-size: 15px;
+          }
+          .form-group input, .form-group textarea {
+            font-size: 15px;
+            padding: 8px 10px;
+          }
+          .pricing-sidebar {
+            min-width: auto;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
+
 export default Promotionandpayment;
