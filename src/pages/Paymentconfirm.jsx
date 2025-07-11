@@ -1,11 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Paymentconfirm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Giả sử mã đặt vé được truyền qua location.state (hoặc lấy từ API)
+  // Responsive state
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 900);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Booking info
   const bookingCode = location.state?.bookingCode || "SJ123456789";
   const passenger = location.state?.passenger || "1 Adult";
   const flightClass = location.state?.flightClass || "Economy";
@@ -28,47 +39,319 @@ const Paymentconfirm = () => {
   };
   const totalPrice = "441.80 USD";
 
+  // Menu navigation
+  const handleNavigate = (page) => {
+    setMobileMenuOpen(false);
+    switch (page) {
+      case "about":
+        navigate("/about");
+        break;
+      case "explore":
+        navigate("/explore");
+        break;
+      case "bookings":
+        navigate("/bookings");
+        break;
+      case "contact":
+        navigate("/contact");
+        break;
+      case "login":
+        navigate("/login");
+        break;
+      case "signup":
+        navigate("/signup");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
+  };
+
   return (
     <div className="flight-select-root">
       <div className="flight-bg" />
       {/* Top Info Bar */}
-      <div className="top-info-bar">
-        <div className="info-left">
-          <span>+84 395908838</span>
-          <span style={{ marginLeft: 24 }}>bookingflight@gmail.com</span>
+      {!isMobile && (
+        <div className="top-info-bar">
+          <div className="info-left">
+            <span>+84 395908838</span>
+            <span style={{ marginLeft: 24 }}>bookingflight@gmail.com</span>
+          </div>
+          <div className="info-right">
+            <span className="link" onClick={() => handleNavigate("login")}>
+              Log In
+            </span>
+            <button
+              className="btn-outline"
+              onClick={() => handleNavigate("signup")}
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
-        <div className="info-right">
-          <span className="link" onClick={() => navigate("/login")}>
-            Log In
-          </span>
-          <button
-            className="btn-outline"
-            onClick={() => navigate("/signup")}
-          >
-            Sign Up
-          </button>
-        </div>
-      </div>
+      )}
       {/* Navigation Bar */}
-      <nav className="nav-bar">
-        <div className="logo" onClick={() => navigate("/")}>
+      <nav
+        className="nav-bar"
+        style={
+          isMobile
+            ? { display: "flex", alignItems: "center", justifyContent: "space-between" }
+            : {}
+        }
+      >
+        <div className="logo" onClick={() => handleNavigate("/")}>
           SkyJourney
         </div>
-        <div className="nav-items">
-          <span className="link" onClick={() => navigate("/about")}>
-            About
-          </span>
-          <span className="link" onClick={() => navigate("/explore")}>
-            Explore
-          </span>
-          <span className="link" onClick={() => navigate("/bookings")}>
-            Bookings
-          </span>
-          <span className="link" onClick={() => navigate("/contact")}>
-            Contact Us
-          </span>
-        </div>
+        {!isMobile && (
+          <div className="nav-items">
+            <span className="link" onClick={() => handleNavigate("about")}>
+              About
+            </span>
+            <span className="link" onClick={() => handleNavigate("explore")}>
+              Explore
+            </span>
+            <span className="link" onClick={() => handleNavigate("bookings")}>
+              Bookings
+            </span>
+            <span className="link" onClick={() => handleNavigate("contact")}>
+              Contact Us
+            </span>
+          </div>
+        )}
+        {isMobile && (
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px",
+              fontSize: "28px",
+              color: "#e0b100",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: "auto",
+            }}
+          >
+            <span style={{ fontSize: "28px", fontWeight: "bold", lineHeight: 1 }}>
+              ☰
+            </span>
+          </button>
+        )}
       </nav>
+      {/* Mobile Menu Popup */}
+      {mobileMenuOpen && isMobile && (
+        <div
+          className="mobile-menu-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="mobile-menu-popup"
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+              padding: "32px 24px",
+              minWidth: "280px",
+              maxWidth: "90vw",
+              textAlign: "center",
+              position: "relative",
+              animation: "slideIn 0.3s ease-out",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="mobile-menu-close"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "16px",
+                background: "none",
+                border: "none",
+                fontSize: "28px",
+                color: "#999",
+                cursor: "pointer",
+                padding: "4px",
+                borderRadius: "50%",
+                width: "36px",
+                height: "36px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              aria-label="Close menu"
+            >
+              ×
+            </button>
+            <h3
+              style={{
+                color: "#e0b100",
+                fontSize: "20px",
+                fontWeight: "700",
+                margin: "0 0 24px 0",
+                letterSpacing: "0.5px",
+              }}
+            >
+              MENU
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <a
+                href="#"
+                style={{
+                  display: "block",
+                  color: "#e0b100",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  backgroundColor: "#f0f0f0",
+                  transition: "background-color 0.2s, color 0.2s",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate("about");
+                }}
+              >
+                About
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: "block",
+                  color: "#333",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  transition: "background-color 0.2s, color 0.2s",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate("explore");
+                }}
+              >
+                Explore
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: "block",
+                  color: "#333",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  transition: "background-color 0.2s, color 0.2s",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate("bookings");
+                }}
+              >
+                Bookings
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: "block",
+                  color: "#333",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  transition: "background-color 0.2s, color 0.2s",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate("contact");
+                }}
+              >
+                Contact Us
+              </a>
+              <div
+                style={{
+                  borderTop: "1px solid #eee",
+                  marginTop: 10,
+                  paddingTop: 10,
+                }}
+              >
+                <a
+                  href="#"
+                  style={{
+                    color: "#e0b100",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    textDecoration: "none",
+                    padding: "12px 16px",
+                    display: "block",
+                    cursor: "pointer",
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigate("login");
+                  }}
+                >
+                  Log In
+                </a>
+                <button
+                  style={{
+                    marginTop: 12,
+                    width: "80%",
+                    background: "#e0b100",
+                    color: "#fff",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleNavigate("signup")}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+            <style>{`
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: scale(0.9);
+                }
+                to {
+                  opacity: 1;
+                  transform: scale(1);
+                }
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
       {/* Main Content */}
       <div className="flight-content">
         <div className="flight-summary">
@@ -155,7 +438,7 @@ const Paymentconfirm = () => {
               <button
                 type="button"
                 className="btn-outline"
-                onClick={() => navigate("/bookings")}
+                onClick={() => handleNavigate("bookings")}
                 style={{ minWidth: 180, fontSize: 16 }}
               >
                 View My Bookings
@@ -163,7 +446,7 @@ const Paymentconfirm = () => {
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => navigate("/")}
+                onClick={() => handleNavigate("/")}
                 style={{ minWidth: 180, fontSize: 16, marginLeft: 16 }}
               >
                 Back to Home
@@ -486,7 +769,6 @@ const Paymentconfirm = () => {
           font-size: 20px;
           font-weight: 700;
         }
-        /* Responsive styles */
         @media (max-width: 1100px) {
           .main-content-container {
             flex-direction: column;
@@ -537,6 +819,17 @@ const Paymentconfirm = () => {
           }
           .pricing-sidebar {
             min-width: auto;
+          }
+        }
+        /* Mobile menu animation */
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
           }
         }
       `}</style>
