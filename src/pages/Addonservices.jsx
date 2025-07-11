@@ -1196,29 +1196,35 @@ const AddonServices = () => {
         
         /* Flight detail card styles */
         .flight-detail-card {
-          background: #fff;
+          background: rgba(255,255,255,0.95); /* giống Passengers */
           border-radius: 16px;
           box-shadow: 0 4px 24px rgba(0,0,0,0.08);
           padding: 20px;
           margin-bottom: 20px;
+          border: none; /* bỏ border nếu có */
         }
         .flight-header {
+          background: #e0b100; /* giống Passengers */
+          color: #fff;
+          padding: 16px 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 15px;
+          border-radius: 12px 12px 0 0;
         }
         .flight-label {
           font-weight: 600;
-          color: #444;
+          color: #fff;
         }
         .flight-price {
           font-weight: 700;
-          color: #222;
+          color: #fff;
           font-size: 18px;
         }
         .flight-info {
           margin-bottom: 15px;
+          padding: 16px 20px;
+          border-bottom: 1px solid #eee;
         }
         .route-info {
           display: flex;
@@ -1230,7 +1236,7 @@ const AddonServices = () => {
           font-weight: 600;
         }
         .arrow {
-          color: #888;
+          color: #e0b100;
         }
         .flight-time {
           color: #666;
@@ -1239,7 +1245,7 @@ const AddonServices = () => {
         .price-breakdown {
           margin-top: 15px;
           border-top: 1px solid #eee;
-          padding-top: 15px;
+          padding: 16px 20px;
         }
         .price-row {
           display: flex;
@@ -1271,12 +1277,6 @@ const AddonServices = () => {
         }
         .tab.active::after {
           content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background: #e0b100;
         }
         
         /* Responsive styles */
