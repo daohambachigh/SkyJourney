@@ -1,25 +1,32 @@
 import React, { useState, useEffect } from "react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
 const AddonServices = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  
-  // State for addon services - tách riêng cho departure và return
+  const location = useLocation();
+
+  // State cho addon services
   const [departureAddons, setDepartureAddons] = useState({
     selectedSeat: null,
     baggagePlan: "20kg",
     selectedMeals: []
   });
-  
   const [returnAddons, setReturnAddons] = useState({
     selectedSeat: null,
     baggagePlan: "20kg",
     selectedMeals: []
   });
-  
-  // State để theo dõi tab hiện tại (đi hoặc về)
-  const [currentTab, setCurrentTab] = useState('departure');
+
+  // Xác định tab mặc định dựa vào location.state.tab (nếu có)
+  const [currentTab, setCurrentTab] = useState(
+    location.state && location.state.tab === "return" ? "return" : "departure"
+  );
+
+  // Giả sử bạn có biến isRoundTrip xác định loại chuyến bay (true nếu khứ hồi, false nếu 1 chiều)
+  // Có thể lấy từ props, context, hoặc location.state. Ở đây ví dụ mặc định là true.
+  const isRoundTrip = true;
 
   // Mock seat map data
   const seatRows = [
@@ -386,7 +393,7 @@ const AddonServices = () => {
         <div className="flight-summary">
           <div className="flight-route">
             <span className="flight-title">HAN - ICN</span>
-            <span className="flight-type">Round trip</span>
+            <span className="flight-type">{isRoundTrip ? "Round trip" : "One way"}</span>
           </div>
           <div className="flight-date">Tue, July 8, 2025 - Sat, July 19, 2025</div>
           <div className="flight-passenger">1 Adult</div>
@@ -394,25 +401,26 @@ const AddonServices = () => {
         </div>
         
         <div className="main-content-container">
-          {/* Left side - Addon Services */}
           <div className="flight-section">
             <h2 className="section-title">Add-on Services</h2>
             
-            {/* Tabs để chuyển đổi giữa departure và return */}
-            <div className="addon-tabs">
-              <button 
-                className={`tab ${currentTab === 'departure' ? 'active' : ''}`}
-                onClick={() => setCurrentTab('departure')}
-              >
-                Departure Flight (HAN → ICN)
-              </button>
-              <button 
-                className={`tab ${currentTab === 'return' ? 'active' : ''}`}
-                onClick={() => setCurrentTab('return')}
-              >
-                Return Flight (ICN → HAN)
-              </button>
-            </div>
+            {/* Tabs cho khứ hồi, ẩn nếu 1 chiều */}
+            {isRoundTrip && (
+              <div className="addon-tabs">
+                <button 
+                  className={`tab ${currentTab === 'departure' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('departure')}
+                >
+                  Departure Flight (HAN → ICN)
+                </button>
+                <button 
+                  className={`tab ${currentTab === 'return' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('return')}
+                >
+                  Return Flight (ICN → HAN)
+                </button>
+              </div>
+            )}
             
             {/* Nội dung add-ons theo tab hiện tại */}
             {currentTab === 'departure' ? (
@@ -640,22 +648,24 @@ const AddonServices = () => {
             )}
             
             <div className="form-row" style={{ justifyContent: "flex-end", gap: 16, marginTop: 32 }}>
-              {currentTab === 'return' ? (
+              {/* Nút Back: nếu khứ hồi và đang ở tab return thì về tab departure, nếu 1 chiều thì về trang passengers */}
+              {isRoundTrip && currentTab === 'return' ? (
                 <button type="button" className="btn-outline" onClick={() => setCurrentTab('departure')}>
                   Back to Departure Flight
                 </button>
               ) : (
-                <button type="button" className="btn-outline" onClick={() => handleNavigate("passengers")}>
+                <button type="button" className="btn-outline" onClick={() => navigate("/passengers")}>
                   Back
                 </button>
               )}
               
-              {currentTab === 'departure' ? (
+              {/* Nút Continue: nếu khứ hồi và đang ở tab departure thì sang tab return, nếu đang ở tab return hoặc 1 chiều thì sang payment */}
+              {isRoundTrip && currentTab === 'departure' ? (
                 <button type="button" className="btn-primary" onClick={() => setCurrentTab('return')}>
                   Continue to Return Flight
                 </button>
               ) : (
-                <button type="button" className="btn-primary" onClick ={() => handleNavigate("payment")}>
+                <button type="button" className="btn-primary" onClick={() => navigate("/promotionandpayment", { state: { isRoundTrip } })}>
                   Continue to Payment
                 </button>
               )}

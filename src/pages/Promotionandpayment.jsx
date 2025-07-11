@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const PAYMENT_TIMEOUT_MINUTES = 5; // Thời gian thanh toán (phút)
 
@@ -10,6 +10,8 @@ const Promotionandpayment = () => {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT_MINUTES * 60); // giây
   const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isRoundTrip = location.state?.isRoundTrip ?? false; // mặc định là false nếu không có
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 900);
@@ -422,7 +424,19 @@ const Promotionandpayment = () => {
                 </div>
               )}
               <div className="form-row" style={{ justifyContent: "flex-end", gap: 16 }}>
-                <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Back</button>
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => {
+                    if (isRoundTrip) {
+                      navigate("/addonservices", { state: { tab: "return" } });
+                    } else {
+                      navigate("/addonservices", { state: { tab: "departure" } });
+                    }
+                  }}
+                >
+                  Back
+                </button>
                 <button
                   type="button"
                   className="btn-primary"
