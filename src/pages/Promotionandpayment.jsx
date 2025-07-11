@@ -481,6 +481,9 @@ const Promotionandpayment = () => {
         </div>
       </div>
       <style>{`
+        body, .flight-select-root, .flight-content, .flight-summary, .main-content-container, .flight-section, .pricing-sidebar, .flight-detail-card, .payment-detail-card {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
         .flight-select-root {
           min-height: 100vh;
           position: relative;
