@@ -184,30 +184,29 @@ const Contact = () => {
         <div className="hero-section">
           <h1 className="hero-title">CONTACT US</h1>
           <p className="hero-subtitle">
-            Luôn sẵn sàng lắng nghe – hãy liên hệ để chúng tôi hỗ trợ chuyến
-            đi của bạn
+            Always ready to listen – contact us for support with your journey.
           </p>
         </div>
 
-        {/* Thông tin liên hệ + Bản đồ */}
+        {/* Contact Info + Map */}
         <div className="about-grid">
-          {/* Thông tin */}
+          {/* Info */}
           <div className="about-card">
-            <h2 className="card-title">Thông tin liên hệ</h2>
+            <h2 className="card-title">Contact Information</h2>
             <p className="card-text">
-              • Địa chỉ: Tầng 81, Landmark 81, Phường Bình Thạnh, TP HCM<br />
-              • Điện thoại: +84 395 908 838<br />
+              • Address: 81st Floor, Landmark 81, Binh Thanh District, Ho Chi Minh City<br />
+              • Phone: +84 395 908 838<br />
               • Email: support@skyjourney.vn<br />
-              • Thời gian làm việc: 08:00 – 22:00 (T2 → CN)
+              • Working hours: 08:00 – 22:00 (Mon → Sun)
             </p>
           </div>
 
-          {/* Bản đồ (Google Maps iframe) */}
+          {/* Map (Google Maps iframe) */}
           <div className="about-card">
-            <h2 className="card-title">Bản đồ</h2>
+            <h2 className="card-title">Map</h2>
             <iframe
               title="SkyJourney office"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890123!2d106.80345678901234!3d10.776543210987654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752a1234567890%3A0x1234567890123456!2sLandmark%2081%20Building%20-%20SkyJourney%20Office!5e0!3m2!1sen!2svi!4v1612345678901"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890123!2d106.80345678901234!3d10.776543210987654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752a1234567890%3A0x1234567890123456!2sLandmark%2081%20Building%20-%20SkyJourney%20Office!5e0!3m2!1sen!2svi!4v1612345678901"
               width="100%"
               height="260"
               style={{ border: 0, borderRadius: "12px" }}
@@ -217,20 +216,20 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Form liên hệ */}
+        {/* Contact Form */}
         <div className="features-grid">
           <div className="feature-card" style={{ gridColumn: "1 / -1" }}>
-            <h3 className="feature-title">Gửi tin nhắn cho chúng tôi</h3>
+            <h3 className="feature-title">Send us a message</h3>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                alert("Cảm ơn bạn! Chúng tôi sẽ phản hồi sớm nhất.");
+                alert("Thank you! We will respond as soon as possible.");
               }}
             >
               <div style={{ display: "grid", gap: "16px" }}>
                 <input
                   type="text"
-                  placeholder="Họ và tên"
+                  placeholder="Full Name"
                   required
                   style={inputStyle}
                 />
@@ -241,13 +240,13 @@ const Contact = () => {
                   style={inputStyle}
                 />
                 <textarea
-                  placeholder="Nội dung"
+                  placeholder="Message"
                   rows="4"
                   required
                   style={{ ...inputStyle, resize: "vertical" }}
                 ></textarea>
                 <button type="submit" className="cta-button">
-                  Gửi liên hệ
+                  Send Message
                 </button>
               </div>
             </form>

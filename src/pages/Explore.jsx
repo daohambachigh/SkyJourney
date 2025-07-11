@@ -206,52 +206,52 @@ const Explore = () => {
             EXPLORE DESTINATIONS
           </h1>
           <p className="hero-subtitle">
-            Khám phá những điểm đến tuyệt vời trên toàn thế giới với những ưu đãi hấp dẫn
+            Discover amazing destinations around the world with exclusive offers.
           </p>
         </div>
 
-        {/* Điểm đến phổ biến */}
+        {/* Popular Destinations */}
         <div className="about-grid">
           <div className="about-card">
             <h2 className="card-title">
-              Châu Á
+              Asia
             </h2>
             <p className="card-text">
-              <strong>Tokyo, Japan</strong> - Từ $450<br />
-              Thủ đô hiện đại với văn hóa truyền thống<br /><br />
-              <strong>Bangkok, Thailand</strong> - Từ $280<br />
-              Thiên đường ẩm thực và mua sắm<br /><br />
-              <strong>Singapore</strong> - Từ $320<br />
-              Thành phố sư tử với kiến trúc đẳng cấp
+              <strong>Tokyo, Japan</strong> - From $450<br />
+              Modern capital with traditional culture<br /><br />
+              <strong>Bangkok, Thailand</strong> - From $280<br />
+              Paradise for food and shopping<br /><br />
+              <strong>Singapore</strong> - From $320<br />
+              Lion city with world-class architecture
             </p>
           </div>
 
           <div className="about-card">
             <h2 className="card-title">
-              Châu Âu
+              Europe
             </h2>
             <p className="card-text">
-              <strong>Paris, France</strong> - Từ $720<br />
-              Thành phố ánh sáng lãng mạn<br /><br />
-              <strong>London, UK</strong> - Từ $650<br />
-              Lịch sử hoàng gia và văn hóa đa dạng<br /><br />
-              <strong>Rome, Italy</strong> - Từ $580<br />
-              Cái nôi của nền văn minh phương Tây
+              <strong>Paris, France</strong> - From $720<br />
+              Romantic city of lights<br /><br />
+              <strong>London, UK</strong> - From $650<br />
+              Royal history and diverse culture<br /><br />
+              <strong>Rome, Italy</strong> - From $580<br />
+              Cradle of Western civilization
             </p>
           </div>
         </div>
 
-        {/* Ưu đãi đặc biệt */}
+        {/* Special Offers */}
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
               🏖️
             </div>
             <h3 className="feature-title">
-              Ưu đãi Hè
+              Summer Deals
             </h3>
             <p className="feature-text">
-              Giảm đến 30% cho các chuyến bay đi biển. Áp dụng cho Bali, Phú Quốc, Nha Trang
+              Up to 30% off for beach flights. Applies to Bali, Phu Quoc, Nha Trang.
             </p>
           </div>
 
@@ -260,10 +260,10 @@ const Explore = () => {
               🎿
             </div>
             <h3 className="feature-title">
-              Tour Mùa Đông
+              Winter Tours
             </h3>
             <p className="feature-text">
-              Trải nghiệm tuyết trắng tại Hàn Quốc, Nhật Bản. Giảm 25% cho đặt trước 30 ngày
+              Experience snow in Korea and Japan. 25% off for bookings 30 days in advance.
             </p>
           </div>
 
@@ -272,39 +272,39 @@ const Explore = () => {
               🌸
             </div>
             <h3 className="feature-title">
-              Mùa Hoa Anh Đào
+              Cherry Blossom Season
             </h3>
             <p className="feature-text">
-              Combo vé + khách sạn Nhật Bản mùa sakura. Ưu đãi đặc biệt từ tháng 3-5
+              Japan flight + hotel combo for Sakura season. Special offers from March to May.
             </p>
           </div>
         </div>
 
-        {/* Hướng dẫn booking */}
+        {/* Booking Guide */}
         <div className="about-grid">
           <div className="about-card">
             <h2 className="card-title">
-              Cách đặt vé
+              How to Book
             </h2>
             <p className="card-text">
-              1. Chọn điểm đến và ngày bay<br />
-              2. So sánh giá từ nhiều hãng<br />
-              3. Nhập thông tin hành khách<br />
-              4. Thanh toán an toàn<br />
-              5. Nhận vé điện tử qua email
+              1. Choose destination and travel date<br />
+              2. Compare prices from airlines<br />
+              3. Enter passenger information<br />
+              4. Secure payment<br />
+              5. Receive e-ticket via email
             </p>
           </div>
 
           <div className="about-card">
             <h2 className="card-title">
-              Lời khuyên du lịch
+              Travel Tips
             </h2>
             <p className="card-text">
-              • Đặt vé trước 2-3 tháng để có giá tốt<br />
-              • Kiểm tra visa và hộ chiếu<br />
-              • Mua bảo hiểm du lịch<br />
-              • Chuẩn bị hành lý theo quy định<br />
-              • Đăng ký thông tin y tế nếu cần
+              • Book 2-3 months in advance for best prices<br />
+              • Check visa and passport requirements<br />
+              • Buy travel insurance<br />
+              • Prepare luggage according to regulations<br />
+              • Register health information if needed
             </p>
           </div>
         </div>
@@ -312,16 +312,16 @@ const Explore = () => {
         {/* Call to Action */}
         <div className="cta-section">
           <h2 className="cta-title">
-            Sẵn sàng khám phá thế giới?
+            Ready to explore the world?
           </h2>
           <p className="cta-text">
-            Tìm chuyến bay phù hợp và bắt đầu cuộc phiêu lưu của bạn ngay hôm nay
+            Find your perfect flight and start your adventure today.
           </p>
           <button 
             className="cta-button"
             onClick={() => handleNavigate('book-flight')}
           >
-            Tìm chuyến bay ngay
+            Find flights now
           </button>
         </div>
       </div>
