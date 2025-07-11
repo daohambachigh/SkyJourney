@@ -1,0 +1,776 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+const Contact = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
+
+  /* ---------- Logic chung cho About.jsx giữ nguyên ---------- */
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const handleNavigate = (page) => {
+    setMobileMenuOpen(false);
+    switch (page) {
+      case "Landingpage":
+        navigate("/");
+        break;
+      case "login":
+        navigate("/login");
+        break;
+      case "signup":
+        navigate("/signup");
+        break;
+      case "about":
+        navigate("/about");
+        break;
+      case "explore":
+        navigate("/explore");
+        break;
+      case "bookings":
+        navigate("/");
+        break;
+      case "contact":
+        navigate("/contact");
+        break;
+      case "book-flight":
+        navigate("/");
+        break;
+      default:
+        break;
+    }
+  };
+  /* ---------------------------------------------------------- */
+
+  return (
+    <div className="about-container">
+      {/* Bối cảnh máy bay + thanh top-info + nav giữ nguyên */}
+      <div className="flight-bg" />
+
+      {/* Top Info Bar – Ẩn trên mobile */}
+      {!isMobile && (
+        <div className="top-info-bar">
+          <div className="contact-info">
+            <span>+84 395 908 838</span>
+            <span>bookingflight@gmail.com</span>
+          </div>
+          <div className="auth-links">
+            <span className="login-link" onClick={() => handleNavigate("login")}>
+              Log In
+            </span>
+            <button
+              className="signup-button"
+              onClick={() => handleNavigate("signup")}
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Bar */}
+      <nav className={`nav-bar ${isMobile ? "mobile" : ""}`}>
+        <div className="logo" onClick={() => handleNavigate("Landingpage")}>
+          SkyJourney
+        </div>
+
+        {/* Desktop Navigation */}
+        {!isMobile && (
+          <div className="nav-links">
+            <span className="nav-link" onClick={() => handleNavigate("about")}>
+              About
+            </span>
+            <span className="nav-link" onClick={() => handleNavigate("explore")}>
+              Explore
+            </span>
+            <span
+              className="nav-link"
+              onClick={() => handleNavigate("bookings")}
+            >
+              Bookings
+            </span>
+            <span
+              className="nav-link active"
+              onClick={() => handleNavigate("contact")}
+            >
+              Contact Us
+            </span>
+          </div>
+        )}
+
+        {/* Nút menu mobile */}
+        {isMobile && (
+          <button
+            className="mobile-menu-button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+        )}
+      </nav>
+
+      {/* Popup menu mobile */}
+      {mobileMenuOpen && isMobile && (
+        <div
+          className="mobile-menu-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="mobile-menu-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="close-menu-button"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              ×
+            </button>
+            <h3 className="mobile-menu-title">MENU</h3>
+
+            <div className="mobile-menu-links">
+              <div
+                className="mobile-menu-link"
+                onClick={() => handleNavigate("about")}
+              >
+                About
+              </div>
+              <div
+                className="mobile-menu-link"
+                onClick={() => handleNavigate("explore")}
+              >
+                Explore
+              </div>
+              <div
+                className="mobile-menu-link"
+                onClick={() => handleNavigate("bookings")}
+              >
+                Bookings
+              </div>
+              <div
+                className="mobile-menu-link active"
+                onClick={() => handleNavigate("contact")}
+              >
+                Contact Us
+              </div>
+              <div className="mobile-menu-auth">
+                <div
+                  className="mobile-login-link"
+                  onClick={() => handleNavigate("login")}
+                >
+                  Log In
+                </div>
+                <button
+                  className="mobile-signup-button"
+                  onClick={() => handleNavigate("signup")}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- PHẦN NỘI DUNG CHÍNH ĐƯỢC THAY ĐỔI ---------- */}
+      <div className="main-content">
+        {/* Hero Section */}
+        <div className="hero-section">
+          <h1 className="hero-title">CONTACT US</h1>
+          <p className="hero-subtitle">
+            Luôn sẵn sàng lắng nghe – hãy liên hệ để chúng tôi hỗ trợ chuyến
+            đi của bạn
+          </p>
+        </div>
+
+        {/* Thông tin liên hệ + Bản đồ */}
+        <div className="about-grid">
+          {/* Thông tin */}
+          <div className="about-card">
+            <h2 className="card-title">Thông tin liên hệ</h2>
+            <p className="card-text">
+              • Địa chỉ: Tầng 81, Landmark 81, Phường Bình Thạnh, TP HCM<br />
+              • Điện thoại: +84 395 908 838<br />
+              • Email: support@skyjourney.vn<br />
+              • Thời gian làm việc: 08:00 – 22:00 (T2 → CN)
+            </p>
+          </div>
+
+          {/* Bản đồ (Google Maps iframe) */}
+          <div className="about-card">
+            <h2 className="card-title">Bản đồ</h2>
+            <iframe
+              title="SkyJourney office"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890123!2d106.80345678901234!3d10.776543210987654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752a1234567890%3A0x1234567890123456!2sLandmark%2081%20Building%20-%20SkyJourney%20Office!5e0!3m2!1sen!2svi!4v1612345678901"
+              width="100%"
+              height="260"
+              style={{ border: 0, borderRadius: "12px" }}
+              allowFullScreen=""
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+
+        {/* Form liên hệ */}
+        <div className="features-grid">
+          <div className="feature-card" style={{ gridColumn: "1 / -1" }}>
+            <h3 className="feature-title">Gửi tin nhắn cho chúng tôi</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                alert("Cảm ơn bạn! Chúng tôi sẽ phản hồi sớm nhất.");
+              }}
+            >
+              <div style={{ display: "grid", gap: "16px" }}>
+                <input
+                  type="text"
+                  placeholder="Họ và tên"
+                  required
+                  style={inputStyle}
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  required
+                  style={inputStyle}
+                />
+                <textarea
+                  placeholder="Nội dung"
+                  rows="4"
+                  required
+                  style={{ ...inputStyle, resize: "vertical" }}
+                ></textarea>
+                <button type="submit" className="cta-button">
+                  Gửi liên hệ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* CSS gốc About.jsx giữ nguyên – không cần sửa */}
+      <style jsx>{`
+        .about-container {
+          min-height: 100vh;
+          background: #f5f7fa;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          overflow-x: hidden;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .flight-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          height: 420px;
+          background: linear-gradient(270deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%), url("assets/images/hero_image.png") center/cover no-repeat;
+          z-index: 0;
+        }
+        
+        .top-info-bar {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 48px;
+          background: #fff;
+          border-bottom: 1px solid #eee;
+          font-size: 16px;
+        }
+        
+        .contact-info {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+        
+        .contact-info span {
+          color: #666;
+          font-size: 14px;
+        }
+        
+        .auth-links {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+        
+        .login-link {
+          color: #e0b100;
+          font-weight: 600;
+          cursor: pointer;
+          transition: color 0.2s;
+          font-size: 15px;
+        }
+        
+        .login-link:hover {
+          color: #d0a000;
+        }
+        
+        .signup-button {
+          border: 1px solid #e0b100;
+          background: transparent;
+          color: #666;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .signup-button:hover {
+          background: #e0b100;
+          color: #fff;
+        }
+        
+        .nav-bar {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 24px 48px;
+          background: #fff;
+          border-bottom: 1px solid #eee;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-bar.mobile {
+          padding: 16px;
+        }
+        
+        .logo {
+          color: #e0b100;
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        
+        .logo:hover {
+          color: #d0a000;
+        }
+        
+        .nav-links {
+          display: flex;
+          gap: 32px;
+        }
+        
+        .nav-link {
+          color: #333;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        
+        .nav-link.active {
+          color: #e0b100;
+        }
+        
+        .nav-link:hover {
+          color: #e0b100;
+        }
+        
+        .mobile-menu-button {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 8px;
+          font-size: 28px;
+          color: #e0b100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: auto;
+          transition: color 0.2s;
+        }
+        
+        .mobile-menu-button:hover {
+          color: #d0a000;
+        }
+        
+        .mobile-menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+        
+        .mobile-menu-content {
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          padding: 32px 24px;
+          min-width: 280px;
+          max-width: 90vw;
+          text-align: center;
+          position: relative;
+          animation: slideIn 0.3s ease-out;
+        }
+        
+        .close-menu-button {
+          position: absolute;
+          top: 12px;
+          right: 16px;
+          background: none;
+          border: none;
+          font-size: 28px;
+          color: #999;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        
+        .close-menu-button:hover {
+          background-color: #f5f5f5;
+          color: #666;
+        }
+        
+        .mobile-menu-title {
+          color: #e0b100;
+          font-size: 20px;
+          font-weight: 700;
+          margin: 0 0 24px 0;
+          letter-spacing: 0.5px;
+        }
+        
+        .mobile-menu-links {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .mobile-menu-link {
+          display: block;
+          color: #333;
+          font-size: 18px;
+          font-weight: 600;
+          text-decoration: none;
+          padding: 12px 16px;
+          border-radius: 8px;
+          transition: background-color 0.2s, color 0.2s;
+          cursor: pointer;
+        }
+        
+        .mobile-menu-link.active {
+          color: #e0b100;
+          background-color: #f0f0f0;
+        }
+        
+        .mobile-menu-link:hover {
+          background-color: #e0b100;
+          color: #fff;
+        }
+        
+        .mobile-menu-auth {
+          border-top: 1px solid #eee;
+          margin-top: 10px;
+          padding-top: 10px;
+        }
+        
+        .mobile-login-link {
+          color: #e0b100;
+          font-size: 16px;
+          font-weight: 600;
+          text-decoration: none;
+          padding: 12px 16px;
+          display: block;
+          cursor: pointer;
+        }
+        
+        .mobile-signup-button {
+          margin-top: 12px;
+          width: 80%;
+          background: #e0b100;
+          color: #fff;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .mobile-signup-button:hover {
+          background: #d0a000;
+          box-shadow: 0 6px 12px rgba(224, 177, 0, 0.4);
+        }
+        
+        .main-content {
+          position: relative;
+          z-index: 1;
+          flex: 1;
+          padding: 64px 96px;
+          max-width: 1200px;
+          margin: 40px auto 80px auto;
+          width: 100%;
+        }
+        
+        .hero-section {
+          text-align: center;
+          margin-bottom: 60px;
+        }
+        
+        .hero-title {
+          color: #e0b100;
+          font-size: 48px;
+          font-weight: 700;
+          margin: 0 0 20px 0;
+          letter-spacing: 1px;
+        }
+        
+        .hero-subtitle {
+          color: #fff;
+          font-size: 20px;
+          line-height: 1.6;
+          max-width: 600px;
+          margin: 0 auto;
+        }
+        
+        .about-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 48px;
+          margin-bottom: 60px;
+        }
+        
+        .about-card {
+          background: rgba(255,255,255,0.95);
+          padding: 32px;
+          border-radius: 16px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        
+        .card-title {
+          color: #e0b100;
+          font-size: 28px;
+          font-weight: 700;
+          margin: 0 0 16px 0;
+        }
+        
+        .card-text {
+          color: #333;
+          font-size: 16px;
+          line-height: 1.7;
+          margin: 0;
+        }
+        
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 32px;
+          margin-bottom: 60px;
+        }
+        
+        .feature-card {
+          background: rgba(255,255,255,0.95);
+          padding: 28px;
+          border-radius: 16px;
+          text-align: center;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        
+        .feature-icon {
+          width: 60px;
+          height: 60px;
+          background: #e0b100;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 16px auto;
+          font-size: 28px;
+        }
+        
+        .feature-title {
+          color: #333;
+          font-size: 20px;
+          font-weight: 600;
+          margin: 0 0 12px 0;
+        }
+        
+        .feature-text {
+          color: #666;
+          font-size: 15px;
+          line-height: 1.6;
+          margin: 0;
+        }
+        
+        .cta-section {
+          background: #e0b100;
+          padding: 48px;
+          border-radius: 20px;
+          text-align: center;
+          color: #fff;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+        }
+        
+        .cta-title {
+          font-size: 32px;
+          font-weight: 700;
+          margin: 0 0 16px 0;
+        }
+        
+        .cta-text {
+          font-size: 18px;
+          line-height: 1.6;
+          margin: 0 0 24px 0;
+          opacity: 0.9;
+        }
+        
+        .cta-button {
+          background: #fff;
+          color: #e0b100;
+          padding: 16px 40px;
+          border: none;
+          border-radius: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .cta-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        /* Mobile styles */
+        @media (max-width: 768px) {
+          .top-info-bar {
+            display: none;
+          }
+          
+          .nav-bar {
+            padding: 16px;
+          }
+          
+          .logo {
+            font-size: 22px;
+          }
+          
+          .main-content {
+            padding: 20px 16px;
+          }
+          
+          .hero-section {
+            margin-bottom: 40px;
+          }
+          
+          .hero-title {
+            font-size: 32px;
+          }
+          
+          .hero-subtitle {
+            font-size: 16px;
+          }
+          
+          .about-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+            margin-bottom: 40px;
+          }
+          
+          .about-card {
+            padding: 24px;
+          }
+          
+          .card-title {
+            font-size: 24px;
+          }
+          
+          .card-text {
+            font-size: 14px;
+          }
+          
+          .features-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-bottom: 40px;
+          }
+          
+          .feature-card {
+            padding: 24px;
+          }
+          
+          .feature-title {
+            font-size: 18px;
+          }
+          
+          .feature-text {
+            font-size: 14px;
+          }
+          
+          .cta-section {
+            padding: 32px 24px;
+          }
+          
+          .cta-title {
+            font-size: 24px;
+          }
+          
+          .cta-text {
+            font-size: 16px;
+          }
+          
+          .cta-button {
+            padding: 14px 32px;
+            font-size: 16px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+/* Style nội bộ cho input – kế thừa màu sắc của theme */
+const inputStyle = {
+  padding: "14px 16px",
+  fontSize: "15px",
+  borderRadius: "12px",
+  border: "1px solid #ddd",
+  outline: "none",
+};
+
+export default Contact;
