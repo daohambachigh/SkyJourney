@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const FlightSelect = () => {
-  const [selectedDate, setSelectedDate] = useState("08 (Tue)");
+  const [selectedDate, setSelectedDate] = useState("");
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState("Recommended");
   const [displayedDates, setDisplayedDates] = useState([]);
@@ -10,30 +10,11 @@ const FlightSelect = () => {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [flights, setFlights] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({});
   const navigate = useNavigate();
-
-  // Dữ liệu mẫu cho các ngày bay
-  const flightDates = [
-    { date: "05 (Sat)", price: "310.90" },
-    { date: "06 (Sun)", price: "420.90" },
-    { date: "07 (Mon)", price: "256.90" },
-    { date: "08 (Tue)", price: "220.90" },
-    { date: "09 (Wed)", price: "310.90" },
-    { date: "10 (Thu)", price: "222.90" },
-    { date: "11 (Fri)", price: "310.90" },
-    { date: "12 (Sat)", price: "330.90" },
-    { date: "13 (Sun)", price: "380.90" },
-    { date: "14 (Mon)", price: "290.90" },
-  ];
-
-  // Dữ liệu mẫu cho các chuyến bay
-  const flights = [
-    { id: 1, departure: "12:20 HAN", arrival: "18:25 ICN", code: "KET23", duration: "6h 5m" },
-    { id: 2, departure: "08:45 HAN", arrival: "14:30 ICN", code: "KET24", duration: "5h 45m" },
-    { id: 3, departure: "15:10 HAN", arrival: "21:05 ICN", code: "KET25", duration: "5h 55m" },
-    { id: 4, departure: "19:30 HAN", arrival: "01:15 ICN", code: "KET26", duration: "5h 45m" },
-    { id: 5, departure: "22:00 HAN", arrival: "03:55 ICN", code: "KET27", duration: "5h 55m" },
-  ];
+  const location = useLocation();
 
   // Tùy chọn sắp xếp
   const sortOptions = [
@@ -72,33 +53,98 @@ const FlightSelect = () => {
     ]
   };
 
-  // Tính toán các ngày hiển thị (3 ngày trước, ngày hiện tại, 3 ngày sau)
+  // Lấy thông tin tìm kiếm từ URL parameters
   useEffect(() => {
-    const selectedIndex = flightDates.findIndex(d => d.date === selectedDate);
-    if (selectedIndex !== -1) {
-      const startIndex = Math.max(0, selectedIndex - 3);
-      const endIndex = Math.min(flightDates.length, selectedIndex + 4);
-      setDisplayedDates(flightDates.slice(startIndex, endIndex));
+    const urlParams = new URLSearchParams(location.search);
+    const params = {
+      from: urlParams.get('from'),
+      to: urlParams.get('to'),
+      date: urlParams.get('date'),
+      tripType: urlParams.get('tripType'),
+      passengers: urlParams.get('passengers')
+    };
+    
+    console.log('🔍 FlightSelect received params:', params);
+    
+    setSearchParams(params);
+    setSelectedDate(params.date);
+    
+    if (params.from && params.to && params.date) {
+      console.log('🛫 About to fetch flights:', {
+        from: params.from,
+        to: params.to, 
+        date: params.date
+      });
+      fetchFlights(params.from, params.to, params.date, params.tripType, params.passengers);
+      generateFlightDates(params.date);
     }
-  }, [selectedDate]);
+  }, [location.search]);
 
-  // Xử lý chọn hạng vé
-  const handleClassSelect = (flightId, className) => {
-    // Nếu đã chọn cùng chuyến bay và cùng hạng vé, đóng panel
-    if (selectedFlight === flightId && selectedClass === className) {
-      setSelectedClass(null);
-      setSelectedFlight(null);
-    } else {
-      setSelectedFlight(flightId);
-      setSelectedClass(className);
+  // Tạo danh sách ngày bay (7 ngày trước và sau ngày được chọn)
+  const generateFlightDates = (selectedDate) => {
+    const baseDate = new Date(selectedDate);
+    const dates = [];
+    
+    for (let i = -7; i <= 7; i++) {
+      const date = new Date(baseDate);
+      date.setDate(baseDate.getDate() + i);
+      
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNumber = date.getDate();
+      
+      dates.push({
+        date: `${dayNumber.toString().padStart(2, '0')} (${dayName})`,
+        fullDate: dateStr,
+        price: "---" // Sẽ được cập nhật từ API
+      });
+    }
+    
+    setDisplayedDates(dates);
+  };
+
+  // Fetch flights từ API
+  const fetchFlights = async (from, to, date, tripType, passengers) => {
+    try {
+      setLoading(true);
+      const url = `http://localhost:5000/api/search-flights?from=${from}&to=${to}&date=${date}&tripType=${tripType}&passengers=${passengers}`;
+      
+      console.log('📡 Calling API:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ API returned:', data.length, 'flights');
+      console.log('📋 Flight data:', data);
+      
+      setFlights(data);
+    } catch (error) {
+      console.error('❌ Error fetching flights:', error);
+      alert('Failed to load flights. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Xử lý chọn vé
-  const handleSelectTicket = (flightId, className) => {
-    alert(`Selected flight ${flightId} with ${className} class!`);
-    setSelectedClass(null);
-    setSelectedFlight(null);
+  // Lấy tên sân bay từ mã sân bay
+  const getAirportName = (code) => {
+    const airportNames = {
+      'HAN': 'Hanoi',
+      'SGN': 'Ho Chi Minh City', 
+      'DAD': 'Da Nang',
+      'ICN': 'Seoul/Incheon',
+      'NRT': 'Tokyo/Narita',
+      'SIN': 'Singapore',
+      'BKK': 'Bangkok',
+      'KUL': 'Kuala Lumpur',
+      'PEK': 'Beijing',
+      'SYD': 'Sydney'
+    };
+    return airportNames[code] || code;
   };
 
   // Responsive check
@@ -114,7 +160,14 @@ const FlightSelect = () => {
     setMobileMenuOpen(false);
     switch (page) {
       case "passengers":
-        navigate("/passengers");
+        // Truyền thông tin chuyến bay đã chọn
+        navigate("/passengers", {
+          state: {
+            selectedFlight: flights.find(f => f.id === selectedFlight),
+            selectedClass: selectedClass,
+            searchParams: searchParams
+          }
+        });
         break;
       case "about":
         navigate("/about");
@@ -139,6 +192,62 @@ const FlightSelect = () => {
         break;
     }
   };
+
+  // Xử lý chọn hạng vé
+  const handleClassSelect = (flightId, className) => {
+    if (selectedFlight === flightId && selectedClass === className) {
+      setSelectedClass(null);
+      setSelectedFlight(null);
+    } else {
+      setSelectedFlight(flightId);
+      setSelectedClass(className);
+    }
+  };
+
+  // Xử lý chọn vé và chuyển đến trang passengers
+  const handleSelectTicket = (flightId, className) => {
+    const flight = flights.find(f => f.id === flightId);
+    navigate("/passengers", {
+      state: {
+        selectedFlight: flight,
+        selectedClass: className,
+        searchParams: searchParams
+      }
+    });
+  };
+
+  // Xử lý thay đổi ngày
+  const handleDateChange = (dateItem) => {
+    setSelectedDate(dateItem.fullDate);
+    const newParams = { ...searchParams, date: dateItem.fullDate };
+    setSearchParams(newParams);
+    
+    // Cập nhật URL
+    const urlParams = new URLSearchParams();
+    Object.keys(newParams).forEach(key => {
+      if (newParams[key]) urlParams.set(key, newParams[key]);
+    });
+    
+    // Fetch flights cho ngày mới
+    fetchFlights(newParams.from, newParams.to, dateItem.fullDate, newParams.tripType, newParams.passengers);
+  };
+
+  // Sắp xếp flights theo tiêu chí được chọn
+  const sortedFlights = [...flights].sort((a, b) => {
+    switch (selectedSort) {
+      case "Price: Low to High":
+        return a.prices.economy - b.prices.economy;
+      case "Price: High to Low":
+        return b.prices.economy - a.prices.economy;
+      case "Duration: Shortest":
+        // Giả sử có trường duration, nếu không thì tính từ departure và arrival time
+        return a.duration - b.duration;
+      case "Departure: Earliest":
+        return a.departureTime.localeCompare(b.departureTime);
+      default:
+        return 0; // Recommended - giữ nguyên thứ tự
+    }
+  });
 
   return (
     <div className="flight-select-root">
@@ -433,29 +542,44 @@ const FlightSelect = () => {
 
       {/* Main Content */}
       <div className="flight-content">
-        {/* Flight Summary */}
+        {/* Flight Summary - Hiển thị thông tin thực từ search params */}
         <div className="flight-summary">
           <div className="flight-route">
-            <span className="flight-title">HAN - ICN</span>
-            <span className="flight-type">Round trip</span>
+            <span className="flight-title">
+              {searchParams.from} - {searchParams.to}
+            </span>
+            <span className="flight-type">
+              {searchParams.tripType === 'roundtrip' ? 'Round trip' : 'One way'}
+            </span>
           </div>
-          <div className="flight-date">Tue, July 8, 2025 - Sat, July 19, 2025</div>
-          <div className="flight-passenger">1 Adult</div>
+          <div className="flight-date">
+            {searchParams.date ? new Date(searchParams.date).toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) : ''}
+          </div>
+          <div className="flight-passenger">
+            {searchParams.passengers ? `${searchParams.passengers} Passenger${parseInt(searchParams.passengers) > 1 ? 's' : ''}` : ''}
+          </div>
           <div className="flight-class">Economy</div>
         </div>
         
         {/* Outbound Flight Section */}
         <div className="flight-section">
-          <h2 className="section-title">Outbound flight HAN Hanoi → ICN Seoul/Incheon</h2>
+          <h2 className="section-title">
+            Outbound flight {searchParams.from} {getAirportName(searchParams.from)} → {searchParams.to} {getAirportName(searchParams.to)}
+          </h2>
           
-          {/* Ngày bay tập trung */}
+          {/* Ngày bay từ database */}
           <div className="date-container-wrapper">
             <div className="dates-container">
               {displayedDates.map((day, index) => (
                 <div 
                   key={index} 
-                  className={`date-item ${selectedDate === day.date ? "active" : ""}`}
-                  onClick={() => setSelectedDate(day.date)}
+                  className={`date-item ${selectedDate === day.fullDate ? "active" : ""}`}
+                  onClick={() => handleDateChange(day)}
                 >
                   <div className="date">{day.date}</div>
                   <div className="price">{day.price}</div>
@@ -505,27 +629,45 @@ const FlightSelect = () => {
             </div>
           </div>
           
-          {/* Flight List */}
+          {/* Loading state */}
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              <div style={{ fontSize: '18px', marginBottom: '10px' }}>Loading flights...</div>
+              <div>Please wait while we find the best flights for you.</div>
+            </div>
+          )}
+          
+          {/* No flights found */}
+          {!loading && flights.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              <div style={{ fontSize: '18px', marginBottom: '10px' }}>No flights found</div>
+              <div>Please try different dates or destinations.</div>
+            </div>
+          )}
+          
+          {/* Flight List từ database */}
           <div className="flight-list">
-            {flights.map((flight) => (
+            {sortedFlights.map((flight) => (
               <div 
                 key={flight.id} 
                 className={`flight-card ${selectedFlight === flight.id ? 'selected' : ''}`}
               >
                 <div className="flight-header">
-                  <div className="flight-code">{flight.code}</div>
-                  <div className="flight-duration">{flight.duration}</div>
+                  <div className="flight-code">{flight.flightNumber}</div>
+                  <div className="flight-duration">
+                    {flight.aircraftModel || 'Boeing 787'}
+                  </div>
                 </div>
                 <div className="flight-info">
                   <div className="time">
                     <div className="departure">
-                      <span className="time-value">{flight.departure}</span>
-                      <span className="airport">Hanoi (HAN)</span>
+                      <span className="time-value">{flight.departureTime}</span>
+                      <span className="airport">{getAirportName(searchParams.from)} ({searchParams.from})</span>
                     </div>
                     <div className="arrow">→</div>
                     <div className="arrival">
-                      <span className="time-value">{flight.arrival}</span>
-                      <span className="airport">Incheon (ICN)</span>
+                      <span className="time-value">{flight.arrivalTime}</span>
+                      <span className="airport">{getAirportName(searchParams.to)} ({searchParams.to})</span>
                     </div>
                   </div>
                   <div className="flight-classes">
@@ -534,21 +676,21 @@ const FlightSelect = () => {
                       onClick={() => handleClassSelect(flight.id, 'economy')}
                     >
                       <span>Economy</span>
-                      <span className="price">220.90</span>
+                      <span className="price">${flight.prices?.economy || '220.90'}</span>
                     </div>
                     <div 
                       className={`class-option business ${selectedFlight === flight.id && selectedClass === 'business' ? 'active' : ''}`}
                       onClick={() => handleClassSelect(flight.id, 'business')}
                     >
                       <span>Business</span>
-                      <span className="price">440.90</span>
+                      <span className="price">${flight.prices?.business || '440.90'}</span>
                     </div>
                     <div 
                       className={`class-option first-class ${selectedFlight === flight.id && selectedClass === 'firstClass' ? 'active' : ''}`}
                       onClick={() => handleClassSelect(flight.id, 'firstClass')}
                     >
                       <span>First Class</span>
-                      <span className="price">880.90</span>
+                      <span className="price">${flight.prices?.firstClass || '880.90'}</span>
                     </div>
                   </div>
                 </div>
@@ -557,13 +699,15 @@ const FlightSelect = () => {
                 {selectedFlight === flight.id && selectedClass && (
                   <div className="class-detail-panel">
                     <div className="panel-header">
-                      <h4>{selectedClass === 'economy' ? 'Economy' : selectedClass === 'business' ? 'Business' : 'First Class'} Class Benefits</h4>
+                      <h4>
+                        {selectedClass === 'economy' ? 'Economy' : selectedClass === 'business' ? 'Business' : 'First Class'} Class Benefits
+                      </h4>
                     </div>
                     <div className="benefits-list">
                       {classBenefits[selectedClass].map((benefit, index) => (
                         <div key={index} className="benefit-item">
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#2e7d32" viewBox="0 0 16 16">
-                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            <path d="M16 8A8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                           </svg>
                           <span>{benefit}</span>
                         </div>
@@ -573,7 +717,6 @@ const FlightSelect = () => {
                       <button 
                         className="select-button"
                         onClick={() => handleSelectTicket(flight.id, selectedClass)}
-                        onClickCapture={() => handleNavigate("passengers")}
                       >
                         Select {selectedClass === 'economy' ? 'Economy' : selectedClass === 'business' ? 'Business' : 'First Class'} Class
                       </button>
@@ -584,21 +727,29 @@ const FlightSelect = () => {
             ))}
           </div>
           
-          {/* Price Summary */}
-          <div className="price-summary">
-            <div className="price-option">
-              <span className="class-label">Economy from</span>
-              <span className="class-price">220.90</span>
+          {/* Price Summary từ flights thực tế */}
+          {flights.length > 0 && (
+            <div className="price-summary">
+              <div className="price-option">
+                <span className="class-label">Economy from</span>
+                <span className="class-price">
+                  ${Math.min(...flights.map(f => f.prices?.economy || 220.90)).toFixed(2)}
+                </span>
+              </div>
+              <div className="price-option">
+                <span className="class-label">Business from</span>
+                <span className="class-price">
+                  ${Math.min(...flights.map(f => f.prices?.business || 440.90)).toFixed(2)}
+                </span>
+              </div>
+              <div className="price-option">
+                <span className="class-label">First Class from</span>
+                <span className="class-price">
+                  ${Math.min(...flights.map(f => f.prices?.firstClass || 880.90)).toFixed(2)}
+                </span>
+              </div>
             </div>
-            <div className="price-option">
-              <span className="class-label">Business from</span>
-              <span className="class-price">440.90</span>
-            </div>
-            <div className="price-option">
-              <span className="class-label">First Class from</span>
-              <span className="class-price">880.90</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
       

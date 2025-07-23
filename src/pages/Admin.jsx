@@ -1,70 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  // Danh sách máy bay cố định
-  const aircraftModels = [
-    { id: 1, model: "Boeing 787-9", capacity: 300 },
-    { id: 2, model: "Airbus A350-900", capacity: 325 },
-    { id: 3, model: "Boeing 777-300ER", capacity: 350 }
-  ];
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Dữ liệu mẫu chuyến bay với thông tin giá vé và số ghế các hạng
-  const [flights, setFlights] = useState([
-    { 
-      id: 1, 
-      flightNumber: "KET23", 
-      departure: "HAN", 
-      arrival: "ICN", 
-      departureTime: "12:20", 
-      arrivalTime: "18:25", 
-      date: "2025-07-08", 
-      aircraftModel: "Boeing 787-9",
-      prices: {
-        economy: 220.90,
-        business: 450.90,
-        firstClass: 880.90
-      },
-      seats: {
-        economy: 200,
-        business: 80,
-        firstClass: 20
-      },
-      status: "On Time" 
-    },
-    { 
-      id: 2, 
-      flightNumber: "KET24", 
-      departure: "HAN", 
-      arrival: "ICN", 
-      departureTime: "08:45", 
-      arrivalTime: "14:30", 
-      date: "2025-07-08", 
-      aircraftModel: "Airbus A350-900",
-      prices: {
-        economy: 240.90,
-        business: 490.90,
-        firstClass: 950.90
-      },
-      seats: {
-        economy: 225,
-        business: 85,
-        firstClass: 15
-      },
-      status: "On Time" 
-    }
-  ]);
-  
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false); // Close sidebar on mobile by default
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // API states
+  const [flights, setFlights] = useState([]);
+  const [airports, setAirports] = useState([]);
+  const [aircrafts, setAircrafts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Tickets state
   const [tickets, setTickets] = useState([
     { id: 1, flightNumber: "KET23", passenger: "Nguyen Van A", class: "Economy", price: 220.90, status: "Confirmed" },
     { id: 2, flightNumber: "KET24", passenger: "Tran Thi B", class: "Business", price: 450.90, status: "Confirmed" },
     { id: 3, flightNumber: "KET23", passenger: "Le Van C", class: "First Class", price: 880.90, status: "Pending" }
   ]);
   
+  // Stats state
   const [stats, setStats] = useState({
     totalFlights: 24,
     activeAircrafts: 8,
@@ -72,6 +44,7 @@ const AdminDashboard = () => {
     revenue: 45876.50
   });
   
+  // Form states
   const [newFlight, setNewFlight] = useState({
     flightNumber: "",
     departure: "",
@@ -96,12 +69,7 @@ const AdminDashboard = () => {
   
   const [editingFlight, setEditingFlight] = useState(null);
 
-  // Aircraft management state
-  const [aircrafts, setAircrafts] = useState([
-    { id: 1, model: "Boeing 787-9", width: 9, length: 30, seatMap: [] },
-    { id: 2, model: "Airbus A350-900", width: 9, length: 32, seatMap: [] },
-    { id: 3, model: "Boeing 777-300ER", width: 10, length: 34, seatMap: [] }
-  ]);
+  // Aircraft form state
   const [newAircraft, setNewAircraft] = useState({
     model: "",
     width: "",
@@ -109,68 +77,133 @@ const AdminDashboard = () => {
   });
   const [editingAircraft, setEditingAircraft] = useState(null);
 
-  // Xử lý thêm chuyến bay mới
-  const handleAddFlight = () => {
-    if (!newFlight.flightNumber || !newFlight.departure || !newFlight.arrival) return;
-    
-    const flight = {
-      id: flights.length + 1,
-      flightNumber: newFlight.flightNumber,
-      departure: newFlight.departure,
-      arrival: newFlight.arrival,
-      departureTime: newFlight.departureTime,
-      arrivalTime: newFlight.arrivalTime,
-      date: newFlight.date,
-      aircraftModel: newFlight.aircraftModel,
-      prices: {
-        economy: parseFloat(newFlight.economyPrice),
-        business: parseFloat(newFlight.businessPrice),
-        firstClass: parseFloat(newFlight.firstClassPrice)
-      },
-      seats: {
-        economy: parseInt(newFlight.economySeats),
-        business: parseInt(newFlight.businessSeats),
-        firstClass: parseInt(newFlight.firstClassSeats)
-      },
-      status: "On Time"
-    };
-    
-    setFlights([...flights, flight]);
-    setStats({...stats, totalFlights: stats.totalFlights + 1});
-    setNewFlight({
-      flightNumber: "",
-      departure: "",
-      arrival: "",
-      departureTime: "",
-      arrivalTime: "",
-      date: "",
-      aircraftModel: "",
-      economyPrice: "",
-      businessPrice: "",
-      firstClassPrice: "",
-      economySeats: "",
-      businessSeats: "",
-      firstClassSeats: ""
-    });
+  // API functions
+  const fetchFlights = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('http://localhost:5000/api/flights');
+      if (!response.ok) throw new Error('Failed to fetch flights');
+      const data = await response.json();
+      setFlights(data);
+    } catch (error) {
+      setError(error.message);
+      console.error('Error fetching flights:', error);
+      // Set default empty array if API fails
+      setFlights([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Xử lý cập nhật chuyến bay
-  const handleUpdateFlight = () => {
-    if (!editingFlight) return;
-    
-    const updatedFlights = flights.map(flight => 
-      flight.id === editingFlight.id ? editingFlight : flight
-    );
-    
-    setFlights(updatedFlights);
-    setEditingFlight(null);
+  const fetchAirports = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/airports');
+      if (!response.ok) throw new Error('Failed to fetch airports');
+      const data = await response.json();
+      setAirports(data);
+    } catch (error) {
+      console.error('Error fetching airports:', error);
+      // Set default empty array if API fails
+      setAirports([]);
+    }
   };
 
-  // Xử lý đăng thông báo
+  const fetchAircrafts = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/aircrafts');
+      if (!response.ok) throw new Error('Failed to fetch aircrafts');
+      const data = await response.json();
+      const formattedAircrafts = data.map(aircraft => ({
+        ...aircraft,
+        width: aircraft.width || 9,
+        length: aircraft.length || 30,
+        seatMap: aircraft.seat_map || []
+      }));
+      setAircrafts(formattedAircrafts);
+    } catch (error) {
+      console.error('Error fetching aircrafts:', error);
+      // Set default empty array if API fails
+      setAircrafts([]);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchFlights();
+    fetchAirports();
+    fetchAircrafts();
+  }, []);
+
+  // Handler functions
+  const handleAddFlight = async () => {
+    if (!editingFlight?.flightNumber || !editingFlight?.departure || !editingFlight?.arrival) {
+      alert('Vui lòng điền đầy đủ thông tin chuyến bay');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/flights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          flightNumber: editingFlight.flightNumber,
+          departure: editingFlight.departure,
+          arrival: editingFlight.arrival,
+          departureTime: editingFlight.departureTime,
+          arrivalTime: editingFlight.arrivalTime,
+          date: editingFlight.date,
+          aircraftModel: editingFlight.aircraftModel
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add flight');
+      }
+
+      alert('Chuyến bay đã được thêm thành công!');
+      setEditingFlight(null);
+      fetchFlights();
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('Error adding flight:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFlight = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa chuyến bay này?")) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:5000/api/flights/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete flight');
+
+      alert('Chuyến bay đã được xóa thành công!');
+      fetchFlights();
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('Error deleting flight:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePostAnnouncement = () => {
-    if (!announcement.title || !announcement.content) return;
+    if (!announcement.title || !announcement.content) {
+      alert('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo');
+      return;
+    }
     
-    alert(`Thông báo đã được đăng: ${announcement.title}`);
+    alert('Thông báo đã được đăng thành công!');
     setAnnouncement({
       title: "",
       content: "",
@@ -178,16 +211,6 @@ const AdminDashboard = () => {
     });
   };
 
-  // Xử lý xóa chuyến bay
-  const handleDeleteFlight = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa chuyến bay này?")) {
-      const updatedFlights = flights.filter(flight => flight.id !== id);
-      setFlights(updatedFlights);
-      setStats({...stats, totalFlights: stats.totalFlights - 1});
-    }
-  };
-
-  // Xử lý thay đổi giờ khởi hành
   const handleChangeDepartureTime = (id, newTime) => {
     const updatedFlights = flights.map(flight => {
       if (flight.id === id) {
@@ -200,28 +223,54 @@ const AdminDashboard = () => {
     alert(`Giờ khởi hành đã được cập nhật cho chuyến bay ${id}`);
   };
 
-  // Thêm máy bay mới
-  const handleAddAircraft = () => {
+  // Thêm máy bay mới (cập nhật để sử dụng API)
+  const handleAddAircraft = async () => {
     if (!newAircraft.model || !newAircraft.width || !newAircraft.length) return;
-    setAircrafts([
-      ...aircrafts,
-      {
-        id: aircrafts.length + 1,
-        model: newAircraft.model,
-        width: parseInt(newAircraft.width),
-        length: parseInt(newAircraft.length),
-        seatMap: Array(parseInt(newAircraft.length))
-          .fill(0)
-          .map(() => Array(parseInt(newAircraft.width)).fill("economy"))
-      }
-    ]);
-    setNewAircraft({ model: "", width: "", length: "" });
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/aircrafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: newAircraft.model,
+          manufacturer: 'Unknown', // Default value
+          width: parseInt(newAircraft.width),
+          length: parseInt(newAircraft.length),
+          seat_map: Array(parseInt(newAircraft.length))
+            .fill(0)
+            .map(() => Array(parseInt(newAircraft.width)).fill("economy"))
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add aircraft');
+
+      alert('Máy bay đã được thêm thành công!');
+      setNewAircraft({ model: "", width: "", length: "" });
+      fetchAircrafts(); // Reload aircrafts
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('Error adding aircraft:', error);
+    }
   };
 
-  // Xóa máy bay
-  const handleDeleteAircraft = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa máy bay này?")) {
-      setAircrafts(aircrafts.filter(a => a.id !== id));
+  // Xóa máy bay (cập nhật để sử dụng API)
+  const handleDeleteAircraft = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa máy bay này?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/aircrafts/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete aircraft');
+
+      alert('Máy bay đã được xóa thành công!');
+      fetchAircrafts(); // Reload aircrafts
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('Error deleting aircraft:', error);
     }
   };
 
@@ -310,7 +359,19 @@ const AdminDashboard = () => {
       {/* Sidebar Navigation */}
       <div className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-logo" onClick={() => navigate("/")}>
-          SkyJourney Admin
+          <span className="logo-text">
+            <span className="logo-sky">SkyJourney</span>
+            <span className="logo-admin">Admin</span>
+          </span>
+          <button 
+            className="sidebar-close"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSidebarOpen(false);
+            }}
+          >
+            ✕
+          </button>
         </div>
         
         <div className="admin-menu">
@@ -372,7 +433,7 @@ const AdminDashboard = () => {
       </div>
       
       {/* Main Content */}
-      <div className="admin-content">
+      <div className="main-content">
         {/* Header */}
         <div className="admin-header">
           <div className="header-left">
@@ -465,239 +526,55 @@ const AdminDashboard = () => {
               <button 
                 className="add-btn"
                 onClick={() => setEditingFlight({})}
+                disabled={loading}
               >
                 + Thêm chuyến bay
               </button>
             </div>
+
+            {loading && <div className="loading">Đang tải...</div>}
+            {error && <div className="error">Lỗi: {error}</div>}
             
-            {editingFlight ? (
-              <div className="edit-form">
-                <h3>{editingFlight.id ? "Chỉnh sửa" : "Thêm mới"} chuyến bay</h3>
-                
-                <div className="form-group">
-                  <label>Số hiệu chuyến bay</label>
-                  <input 
-                    type="text" 
-                    value={editingFlight.flightNumber || ""}
-                    onChange={(e) => setEditingFlight({...editingFlight, flightNumber: e.target.value})}
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Điểm đi</label>
-                    <input 
-                      type="text" 
-                      value={editingFlight.departure || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, departure: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Điểm đến</label>
-                    <input 
-                      type="text" 
-                      value={editingFlight.arrival || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, arrival: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Giờ khởi hành</label>
-                    <input 
-                      type="time" 
-                      value={editingFlight.departureTime || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, departureTime: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Giờ đến</label>
-                    <input 
-                      type="time" 
-                      value={editingFlight.arrivalTime || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, arrivalTime: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Ngày bay</label>
-                    <input 
-                      type="date" 
-                      value={editingFlight.date || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, date: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Máy bay</label>
-                    <select
-                      value={editingFlight.aircraftModel || ""}
-                      onChange={(e) => setEditingFlight({...editingFlight, aircraftModel: e.target.value})}
-                    >
-                      <option value="">Chọn máy bay</option>
-                      {aircraftModels.map(aircraft => (
-                        <option key={aircraft.id} value={aircraft.model}>
-                          {aircraft.model} ({aircraft.capacity} ghế)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                <h4>Giá vé và Số ghế</h4>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Economy - Giá (VND)</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.prices?.economy || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        prices: {...editingFlight.prices, economy: e.target.value}
-                      })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số ghế</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.seats?.economy || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        seats: {...editingFlight.seats, economy: e.target.value}
-                      })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Business - Giá (VND)</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.prices?.business || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        prices: {...editingFlight.prices, business: e.target.value}
-                      })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số ghế</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.seats?.business || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        seats: {...editingFlight.seats, business: e.target.value}
-                      })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>First Class - Giá (VND)</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.prices?.firstClass || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        prices: {...editingFlight.prices, firstClass: e.target.value}
-                      })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số ghế</label>
-                    <input 
-                      type="number" 
-                      value={editingFlight.seats?.firstClass || ""}
-                      onChange={(e) => setEditingFlight({
-                        ...editingFlight,
-                        seats: {...editingFlight.seats, firstClass: e.target.value}
-                      })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-actions">
-                  <button 
-                    className="cancel-btn"
-                    onClick={() => setEditingFlight(null)}
-                  >
-                    Hủy
-                  </button>
-                  <button 
-                    className="save-btn"
-                    onClick={editingFlight.id ? handleUpdateFlight : handleAddFlight}
-                  >
-                    {editingFlight.id ? "Cập nhật" : "Thêm mới"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="table-container">
-                  <table className="management-table">
-                    <thead>
-                      <tr>
-                        <th>Số hiệu</th>
-                        <th>Tuyến bay</th>
-                        <th>Máy bay</th>
-                        <th>Giờ bay</th>
-                        <th>Ngày</th>
-                        <th>Giá vé (Economy)</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {flights.map(flight => (
-                        <tr key={flight.id}>
-                          <td>{flight.flightNumber}</td>
-                          <td>{flight.departure} → {flight.arrival}</td>
-                          <td>{flight.aircraftModel}</td>
-                          <td>
-                            <input 
-                              type="time" 
-                              value={flight.departureTime}
-                              onChange={(e) => handleChangeDepartureTime(flight.id, e.target.value)}
-                              className="time-input"
-                            />
-                          </td>
-                          <td>{flight.date}</td>
-                          <td>{formatCurrency(flight.prices?.economy)}</td>
-                          <td>
-                            <span className={`status-badge ${flight.status === "On Time" ? "active" : "warning"}`}>
-                              {flight.status}
-                            </span>
-                          </td>
-                          <td>
-                            <button 
-                              className="edit-btn"
-                              onClick={() => setEditingFlight(flight)}
-                            >
-                              Sửa
-                            </button>
-                            <button 
-                              className="delete-btn"
-                              onClick={() => handleDeleteFlight(flight.id)}
-                            >
-                              Xóa
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+            <div className="table-container">
+              <table className="management-table">
+                <thead>
+                  <tr>
+                    <th>Số hiệu</th>
+                    <th>Tuyến bay</th>
+                    <th>Máy bay</th>
+                    <th>Giờ bay</th>
+                    <th>Ngày</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {flights.map(flight => (
+                    <tr key={flight.id}>
+                      <td>{flight.flightNumber}</td>
+                      <td>{flight.departure} → {flight.arrival}</td>
+                      <td>{flight.aircraftModel}</td>
+                      <td>{flight.departureTime}</td>
+                      <td>{flight.date}</td>
+                      <td>
+                        <span className={`status-badge ${flight.status === "On Time" ? "active" : "warning"}`}>
+                          {flight.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="delete-btn"
+                          onClick={() => handleDeleteFlight(flight.id)}
+                          disabled={loading}
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
         
@@ -1246,7 +1123,9 @@ const AdminDashboard = () => {
       </div>
       
       {/* Overlay for mobile */}
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>}
+      {sidebarOpen && isMobile && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
+      )}
       
       <style jsx>{`
   .admin-dashboard {
@@ -1254,7 +1133,6 @@ const AdminDashboard = () => {
     min-height: 100vh;
     font-family: 'Inter', sans-serif;
     background-color: #f5f7fa;
-    position: relative;
   }
 
   .admin-sidebar {
@@ -1262,39 +1140,95 @@ const AdminDashboard = () => {
     left: 0;
     top: 0;
     height: 100vh;
-    width: 220px; /* Mặc định mở rộng */
+    width: 280px;
     background: #1a237e;
     color: white;
-    padding: 20px 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
+    transition: all 0.3s ease;
     z-index: 1000;
     overflow: hidden;
   }
+
   .admin-sidebar:not(.open) {
     width: 80px;
   }
-  .admin-sidebar.open {
-    width: 220px;
-  }
+
   .admin-logo {
-    font-size: 18px;
-    font-weight: 700;
-    padding: 0 20px 20px;
+    padding: 20px;
     border-bottom: 1px solid #3949ab;
-    margin-bottom: 20px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+  }
+
+  .logo-sky {
+    font-size: 16px;
+    font-weight: 700;
     color: #ffd600;
-    white-space: nowrap;
-    opacity: 1;
-    transition: opacity 0.3s ease;
+    letter-spacing: 0.5px;
   }
+
+  .logo-admin {
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+
+  /* Desktop: Khi sidebar thu nhỏ, logo căn giữa và chia 2 dòng */
   .admin-sidebar:not(.open) .admin-logo {
-    opacity: 0;
+    padding: 15px 10px;
+    justify-content: center;
   }
+
+  .admin-sidebar:not(.open) .logo-text {
+    align-items: center;
+    text-align: center;
+  }
+
+  .admin-sidebar:not(.open) .logo-sky {
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+
+  .admin-sidebar:not(.open) .logo-admin {
+    font-size: 9px;
+    margin-top: 1px;
+  }
+
+  /* Mobile: Nút X */
+  .sidebar-close {
+    display: none;
+    background: none;
+    border: none;
+    color: #ffd600;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+  }
+
   .admin-menu {
     flex: 1;
+    padding: 20px 0;
   }
 
   .menu-item {
@@ -1305,6 +1239,7 @@ const AdminDashboard = () => {
     transition: all 0.2s;
     border-left: 4px solid transparent;
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .menu-item:hover {
@@ -1320,19 +1255,34 @@ const AdminDashboard = () => {
     margin-right: 12px;
     font-size: 18px;
     min-width: 18px;
+    text-align: center;
   }
 
   .menu-item span {
     opacity: 1;
     transition: opacity 0.3s ease;
+    overflow: hidden;
+  }
+
+  /* Desktop: Ẩn text menu khi sidebar đóng */
+  .admin-sidebar:not(.open) .menu-item {
+    padding: 15px 10px;
+    justify-content: center;
   }
 
   .admin-sidebar:not(.open) .menu-item span {
     opacity: 0;
+    width: 0;
+    margin: 0;
+  }
+
+  .admin-sidebar:not(.open) .menu-item .icon {
+    margin-right: 0;
   }
 
   .admin-footer {
     padding: 20px;
+    border-top: 1px solid #3949ab;
   }
 
   .logout-btn {
@@ -1347,40 +1297,55 @@ const AdminDashboard = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
     white-space: nowrap;
   }
 
   .logout-btn .icon {
     margin-right: 8px;
+    transition: margin 0.3s ease;
   }
 
   .logout-btn span {
-    opacity: 1;
     transition: opacity 0.3s ease;
+  }
+
+  /* Desktop: Thu nhỏ logout button */
+  .admin-sidebar:not(.open) .logout-btn {
+    padding: 10px 5px;
+  }
+
+  .admin-sidebar:not(.open) .logout-btn .icon {
+    margin-right: 0;
   }
 
   .admin-sidebar:not(.open) .logout-btn span {
     opacity: 0;
+    width: 0;
   }
 
-  .admin-content {
+  .main-content {
     flex: 1;
-    padding: 20px;
-    margin-left: 220px;
+    margin-left: 280px;
     transition: margin-left 0.3s ease;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
-  .admin-sidebar:not(.open) ~ .admin-content {
+
+  .admin-sidebar:not(.open) + .main-content {
     margin-left: 80px;
   }
 
   .admin-header {
+    background: white;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e0e0e0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
   .header-left {
@@ -1390,7 +1355,6 @@ const AdminDashboard = () => {
   }
 
   .sidebar-toggle {
-    display: block;
     background: #1a237e;
     color: white;
     border: none;
@@ -1410,6 +1374,8 @@ const AdminDashboard = () => {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 14px;
+    color: #666;
   }
 
   .admin-avatar {
@@ -1424,84 +1390,59 @@ const AdminDashboard = () => {
     font-weight: bold;
   }
 
+  /* Sidebar overlay for mobile */
   .sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
     display: none;
   }
 
-  /* Responsive Styles */
-  @media (max-width: 768px) {
-    .admin-sidebar {
-      width: 0;
-      transform: translateX(-100%);
-    }
-    
-    .admin-sidebar.open {
-      width: 250px;
-      transform: translateX(0);
-    }
-    
-    .admin-content {
-      margin-left: 0;
-    }
-    
-    .sidebar-toggle {
-      display: block;
-    }
-    
-    .sidebar-overlay {
-      display: block;
-    }
-    
-    .stats-cards {
-      grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-      flex-direction: column;
-      gap: 0;
-    }
-    
-    .filter-controls {
-      flex-wrap: wrap;
-    }
+  /* Dashboard Content */
+  .dashboard-container,
+  .management-container,
+  .announcement-container,
+  .stats-container {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
   }
 
-  /* Dashboard Styles */
   .stats-cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin-bottom: 30px;
   }
-  
+
   .stat-card {
     background: white;
     border-radius: 10px;
-    padding: 20px;
+    padding: 25px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     position: relative;
     overflow: hidden;
+    border: 1px solid #f0f0f0;
   }
-  
+
   .stat-value {
     font-size: 32px;
     font-weight: 700;
     color: #1a237e;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    line-height: 1;
   }
-  
+
   .stat-label {
     font-size: 14px;
     color: #666;
+    margin: 0;
   }
-  
+
   .stat-icon {
     position: absolute;
     top: 20px;
@@ -1509,30 +1450,37 @@ const AdminDashboard = () => {
     font-size: 30px;
     opacity: 0.2;
   }
-  
+
   .recent-activities {
     background: white;
     border-radius: 10px;
-    padding: 20px;
+    padding: 25px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
   }
-  
+
   .recent-activities h2 {
-    margin-top: 0;
+    margin: 0 0 20px 0;
     font-size: 20px;
     color: #1a237e;
   }
-  
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+  }
+
   .activity-item {
     display: flex;
+    align-items: flex-start;
     padding: 15px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f0f0;
   }
-  
+
   .activity-item:last-child {
     border-bottom: none;
   }
-  
+
   .activity-icon {
     width: 40px;
     height: 40px;
@@ -1543,459 +1491,406 @@ const AdminDashboard = () => {
     justify-content: center;
     margin-right: 15px;
     font-size: 18px;
+    flex-shrink: 0;
   }
-  
+
+  .activity-details {
+    flex: 1;
+  }
+
   .activity-title {
     font-weight: 500;
     margin-bottom: 5px;
+    color: #333;
   }
-  
+
   .activity-time {
     font-size: 13px;
     color: #888;
   }
-  
+
   /* Management Styles */
-  .management-container, .announcement-container, .stats-container {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-  
   .management-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
   }
-  
+
+  .management-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #1a237e;
+  }
+
   .add-btn {
     background: #1a237e;
     color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
+    padding: 12px 20px;
+    border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
+    font-size: 14px;
+    transition: background 0.2s;
   }
-  
-  .edit-form {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+
+  .add-btn:hover {
+    background: #303f9f;
   }
-  
-  .form-group {
-    margin-bottom: 15px;
+
+  .add-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .form-group input, 
-  .form-group select, 
-  .form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 15px;
-    box-sizing: border-box;
-  }
-  
-  .form-row {
-    display: flex;
-    gap: 15px;
-  }
-  
-  .form-row .form-group {
-    flex: 1;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .cancel-btn {
-    background: #f5f5f5;
-    color: #333;
-    border: 1px solid #ddd;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .save-btn {
-    background: #1a237e;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 5px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  
+
   .table-container {
-    overflow-x: auto;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
   }
-  
+
   .management-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
   }
-  
+
   .management-table th {
-    background: #e8eaf6;
-    padding: 12px 15px;
+    background: #f8f9fa;
+    padding: 15px 20px;
     text-align: left;
     font-weight: 600;
     color: #1a237e;
-    border-bottom: 2px solid #c5cae9;
+    border-bottom: 2px solid #e9ecef;
+    font-size: 14px;
   }
-  
+
   .management-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
   }
-  
+
   .management-table tr:hover {
-    background: #f9f9f9;
+    background: #f8f9fa;
   }
-  
+
   .status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
-  
+
   .status-badge.active {
-    background: #e8f5e9;
+    background: #e8f5e8;
     color: #2e7d32;
   }
-  
+
   .status-badge.warning {
     background: #fff8e1;
     color: #f57f17;
   }
-  
+
   .status-badge.pending {
     background: #e3f2fd;
     color: #1565c0;
   }
-  
-  .edit-btn, .delete-btn, .view-btn, .confirm-btn {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 14px;
+
+  .delete-btn,
+  .edit-btn,
+  .view-btn,
+  .confirm-btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    margin-right: 5px;
+    margin-right: 8px;
+    border: none;
+    transition: all 0.2s;
   }
-  
-  .edit-btn {
-    background: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #bbdefb;
-  }
-  
+
   .delete-btn {
     background: #ffebee;
     color: #c62828;
-    border: 1px solid #ffcdd2;
   }
-  
-  .view-btn {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+
+  .delete-btn:hover {
+    background: #ffcdd2;
   }
-  
-  .confirm-btn {
-    background: #fff8e1;
-    color: #f57f17;
-    border: 1px solid #ffecb3;
-  }
-  
-  .time-input {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .filter-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  
-  .filter-controls select, 
-  .filter-controls input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .filter-btn, .export-btn {
-    background: #1a237e;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .stats-summary {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 8px;
-  }
-  
-  .stat-item {
-    text-align: center;
-  }
-  
-  .stat-label {
-    font-size: 14px;
-    color: #666;
-  }
-  
-  .stat-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1a237e;
-  }
-  
-  /* Announcement Styles */
-  .announcement-form {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 30px;
-  }
-  
-  .publish-btn {
-    background: #1a237e;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  
-  .preview-btn {
-    background: #e0e0e0;
-    color: #333;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-right: 10px;
-  }
-  
-  .history-item {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  }
-  
-  .item-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  
-  .item-title {
-    font-weight: 600;
-  }
-  
-  .item-priority {
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
-  .item-priority.normal {
+
+  .edit-btn {
     background: #e3f2fd;
     color: #1565c0;
   }
-  
-  .item-priority.high {
+
+  .view-btn {
+    background: #e8f5e8;
+    color: #2e7d32;
+  }
+
+  .confirm-btn {
     background: #fff8e1;
     color: #f57f17;
   }
-  
-  .item-content {
-    color: #555;
-    margin-bottom: 10px;
-  }
-  
-  .item-footer {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: #888;
-  }
-  
-  .item-actions button {
-    background: none;
-    border: none;
-    color: #1a237e;
-    cursor: pointer;
-    margin-left: 10px;
-  }
-  
-  /* Stats Styles */
-  .charts-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-  
-  .chart-card {
+
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
     background: white;
     border-radius: 10px;
-    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid #ffcdd2;
+    font-weight: 500;
+  }
+
+  /* Form Styles */
+  .edit-form {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
   }
-  
-  .chart-placeholder {
-    height: 250px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+
+  .edit-form h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    color: #1a237e;
   }
-  
-  .bar-chart {
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #1a237e;
+  }
+
+  .form-row {
     display: flex;
-    align-items: flex-end;
-    height: 180px;
     gap: 20px;
     margin-bottom: 20px;
   }
-  
-  .bar {
-    width: 40px;
-    background: #1a237e;
-    position: relative;
-    border-radius: 4px 4px 0 0;
+
+  .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
   }
-  
-  .bar span {
-    position: absolute;
-    bottom: -25px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 12px;
-  }
-  
-  .pie-chart {
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    position: relative;
-    background: conic-gradient(
-      #2e7d32 0deg 65%, 
-      #1565c0 65deg 90%, 
-      #6a1b9a 90deg 100%
-    );
-  }
-  
-  .chart-center {
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    background: white;
-    border-radius: 50%;
-    top: 45px;
-    left: 45px;
-  }
-  
-  .chart-legend {
-    margin-top: 20px;
-  }
-  
-  .chart-legend div {
+
+  .form-actions {
     display: flex;
-    align-items: center;
-    margin-bottom: 5px;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
   }
-  
-  .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 2px;
-    margin-right: 8px;
-  }
-  
-  .legend-color.economy {
-    background: #2e7d32;
-  }
-  
-  .legend-color.business {
-    background: #1565c0;
-  }
-  
-  .legend-color.first-class {
-    background: #6a1b9a;
-  }
-  
-  .stats-table {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-  
-  .stats-table h3 {
-    margin-top: 0;
-    color: #1a237e;
-  }
-  
-  .stats-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .stats-table th {
-    background: #e8eaf6;
-    padding: 12px 15px;
-    text-align: left;
+
+  .cancel-btn {
+    background: #f8f9fa;
+    color: #495057;
+    border: 2px solid #e9ecef;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-weight: 600;
-    color: #1a237e;
-    border-bottom: 2px solid #c5cae9;
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  
-  .stats-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
+
+  .cancel-btn:hover {
+    background: #e9ecef;
   }
-  
-  .stats-table tr:hover {
-    background: #f9f9f9;
+
+  .save-btn {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .save-btn:hover {
+    background: #303f9f;
+  }
+
+  .save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Responsive - Tablet */
+  @media (max-width: 1024px) {
+    .stats-cards {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .dashboard-container,
+    .management-container,
+    .announcement-container,
+    .stats-container {
+      padding: 20px;
+    }
+
+    .admin-header {
+      padding: 15px 20px;
+    }
+
+    .admin-header h1 {
+      font-size: 20px;
+    }
+  }
+
+  /* Responsive - Mobile */
+  @media (max-width: 768px) {
+    .admin-sidebar {
+      transform: translateX(-100%);
+      width: 280px !important; /* Force full width on mobile */
+    }
+
+    .admin-sidebar.open {
+      transform: translateX(0);
+    }
+
+    /* Show X button on mobile */
+    .admin-sidebar .sidebar-close {
+      display: flex;
+    }
+
+    /* Show overlay on mobile when sidebar is open */
+    .sidebar-overlay {
+      display: block;
+    }
+
+    .main-content {
+      margin-left: 0 !important; /* Remove margin on mobile */
+    }
+
+    .stats-cards {
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .management-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 15px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .management-table {
+      min-width: 600px;
+    }
+
+    .admin-info span {
+      display: none; /* Hide admin text on mobile */
+    }
+
+    .header-left {
+      gap: 10px;
+    }
+
+    .admin-header h1 {
+      font-size: 18px;
+    }
+  }
+
+  /* Responsive - Small Mobile */
+  @media (max-width: 480px) {
+    .stats-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .dashboard-container,
+    .management-container,
+    .announcement-container,
+    .stats-container {
+      padding: 15px;
+    }
+
+    .admin-header {
+      padding: 12px 15px;
+    }
+
+    .stat-card {
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+    }
+
+    .activity-item {
+      padding: 12px 0;
+    }
+
+    .activity-icon {
+      width: 35px;
+      height: 35px;
+      font-size: 16px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-actions button {
+      width: 100%;
+    }
   }
 `}</style>
     </div>
