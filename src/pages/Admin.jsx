@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Danh sách máy bay cố định
   const aircraftModels = [
@@ -94,6 +95,19 @@ const AdminDashboard = () => {
   });
   
   const [editingFlight, setEditingFlight] = useState(null);
+
+  // Aircraft management state
+  const [aircrafts, setAircrafts] = useState([
+    { id: 1, model: "Boeing 787-9", width: 9, length: 30, seatMap: [] },
+    { id: 2, model: "Airbus A350-900", width: 9, length: 32, seatMap: [] },
+    { id: 3, model: "Boeing 777-300ER", width: 10, length: 34, seatMap: [] }
+  ]);
+  const [newAircraft, setNewAircraft] = useState({
+    model: "",
+    width: "",
+    length: ""
+  });
+  const [editingAircraft, setEditingAircraft] = useState(null);
 
   // Xử lý thêm chuyến bay mới
   const handleAddFlight = () => {
@@ -186,6 +200,61 @@ const AdminDashboard = () => {
     alert(`Giờ khởi hành đã được cập nhật cho chuyến bay ${id}`);
   };
 
+  // Thêm máy bay mới
+  const handleAddAircraft = () => {
+    if (!newAircraft.model || !newAircraft.width || !newAircraft.length) return;
+    setAircrafts([
+      ...aircrafts,
+      {
+        id: aircrafts.length + 1,
+        model: newAircraft.model,
+        width: parseInt(newAircraft.width),
+        length: parseInt(newAircraft.length),
+        seatMap: Array(parseInt(newAircraft.length))
+          .fill(0)
+          .map(() => Array(parseInt(newAircraft.width)).fill("economy"))
+      }
+    ]);
+    setNewAircraft({ model: "", width: "", length: "" });
+  };
+
+  // Xóa máy bay
+  const handleDeleteAircraft = (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa máy bay này?")) {
+      setAircrafts(aircrafts.filter(a => a.id !== id));
+    }
+  };
+
+  // Chỉnh sửa sơ đồ ghế
+  const [selectedAircraftId, setSelectedAircraftId] = useState(null);
+  const [seatMapEdit, setSeatMapEdit] = useState(null);
+
+  const handleEditSeatMap = (aircraft) => {
+    setSelectedAircraftId(aircraft.id);
+    setSeatMapEdit(
+      aircraft.seatMap.length
+        ? JSON.parse(JSON.stringify(aircraft.seatMap))
+        : Array(aircraft.length)
+            .fill(0)
+            .map(() => Array(aircraft.width).fill("economy"))
+    );
+  };
+
+  const handleSeatTypeChange = (rowIdx, colIdx, type) => {
+    const updated = seatMapEdit.map((row, r) =>
+      row.map((seat, c) => (r === rowIdx && c === colIdx ? type : seat))
+    );
+    setSeatMapEdit(updated);
+  };
+
+  const handleSaveSeatMap = () => {
+    setAircrafts(aircrafts.map(a =>
+      a.id === selectedAircraftId ? { ...a, seatMap: seatMapEdit } : a
+    ));
+    setSelectedAircraftId(null);
+    setSeatMapEdit(null);
+  };
+
   // Định dạng tiền tệ
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -194,52 +263,110 @@ const AdminDashboard = () => {
     }).format(amount * 1000);
   };
 
+  // Update seatMap when width/length changes in aircraft edit form
+  React.useEffect(() => {
+    if (
+      editingAircraft &&
+      (editingAircraft.width || editingAircraft.length)
+    ) {
+      const width = parseInt(editingAircraft.width) || 0;
+      const length = parseInt(editingAircraft.length) || 0;
+      if (width > 0 && length > 0) {
+        // Generate new seatMap with default "economy"
+        setEditingAircraft(prev => ({
+          ...prev,
+          seatMap: Array(length)
+            .fill(0)
+            .map((_, rowIdx) =>
+              Array(width)
+                .fill(0)
+                .map((_, colIdx) =>
+                  prev.seatMap &&
+                  prev.seatMap[rowIdx] &&
+                  prev.seatMap[rowIdx][colIdx]
+                    ? prev.seatMap[rowIdx][colIdx]
+                    : "economy"
+                )
+            )
+        }));
+      }
+    }
+  }, [editingAircraft?.width, editingAircraft?.length]);
+
+  // Thêm chức năng chọn hạng ghế theo hàng trong seat map editor
+  const handleSetRowClass = (rowIdx, seatType) => {
+    if (!editingAircraft || !editingAircraft.seatMap) return;
+    const updatedSeatMap = editingAircraft.seatMap.map((row, idx) =>
+      idx === rowIdx ? row.map(() => seatType) : row
+    );
+    setEditingAircraft({
+      ...editingAircraft,
+      seatMap: updatedSeatMap
+    });
+  };
+
   return (
     <div className="admin-dashboard">
       {/* Sidebar Navigation */}
-      <div className="admin-sidebar">
-        <div className="admin-logo" onClick={() => navigate("/")}>SkyJourney Admin</div>
+      <div className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="admin-logo" onClick={() => navigate("/")}>
+          SkyJourney Admin
+        </div>
         
         <div className="admin-menu">
           <div 
             className={`menu-item ${activeTab === "dashboard" ? "active" : ""}`} 
             onClick={() => setActiveTab("dashboard")}
           >
-            <i className="icon">📊</i> Dashboard
+            <i className="icon">📊</i> 
+            <span>Dashboard</span>
           </div>
           
           <div 
             className={`menu-item ${activeTab === "flights" ? "active" : ""}`} 
             onClick={() => setActiveTab("flights")}
           >
-            <i className="icon">✈️</i> Quản lý Chuyến bay
+            <i className="icon">✈️</i> 
+            <span>Flight Management</span>
           </div>
           
           <div 
             className={`menu-item ${activeTab === "tickets" ? "active" : ""}`} 
             onClick={() => setActiveTab("tickets")}
           >
-            <i className="icon">🎫</i> Quản lý Vé
+            <i className="icon">🎫</i> 
+            <span>Ticket Management</span>
           </div>
           
           <div 
             className={`menu-item ${activeTab === "announcements" ? "active" : ""}`} 
             onClick={() => setActiveTab("announcements")}
           >
-            <i className="icon">📢</i> Đăng thông tin
+            <i className="icon">📢</i> 
+            <span>Announcements</span>
           </div>
           
           <div 
             className={`menu-item ${activeTab === "stats" ? "active" : ""}`} 
             onClick={() => setActiveTab("stats")}
           >
-            <i className="icon">📈</i> Thống kê
+            <i className="icon">📈</i> 
+            <span>Statistics</span>
+          </div>
+
+          <div 
+            className={`menu-item ${activeTab === "aircrafts" ? "active" : ""}`} 
+            onClick={() => setActiveTab("aircrafts")}
+          >
+            <i className="icon">🛩️</i> 
+            <span>Aircraft Management</span>
           </div>
         </div>
         
         <div className="admin-footer">
           <button className="logout-btn" onClick={() => navigate("/")}>
-            <i className="icon">🚪</i> Đăng xuất
+            <i className="icon">🚪</i> 
+            <span>Log out</span>
           </button>
         </div>
       </div>
@@ -248,13 +375,22 @@ const AdminDashboard = () => {
       <div className="admin-content">
         {/* Header */}
         <div className="admin-header">
-          <h1>
-            {activeTab === "dashboard" && "Dashboard"}
-            {activeTab === "flights" && "Quản lý Chuyến bay"}
-            {activeTab === "tickets" && "Quản lý Vé"}
-            {activeTab === "announcements" && "Đăng thông tin"}
-            {activeTab === "stats" && "Thống kê"}
-          </h1>
+          <div className="header-left">
+            <button 
+              className="sidebar-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              ☰
+            </button>
+            <h1>
+              {activeTab === "dashboard" && "Dashboard"}
+              {activeTab === "flights" && "Flight Management"}
+              {activeTab === "tickets" && "Ticket Management"}
+              {activeTab === "announcements" && "Announcements"}
+              {activeTab === "stats" && "Statistics"}
+              {activeTab === "aircrafts" && "Aircraft Management"}
+            </h1>
+          </div>
           <div className="admin-info">
             <span>Admin: Nguyen Van Quan Ly</span>
             <div className="admin-avatar">QL</div>
@@ -847,658 +983,1021 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+        
+        {/* Aircraft Management Tab */}
+        {activeTab === "aircrafts" && (
+          <div className="management-container">
+            <div className="management-header">
+              <h2>Aircraft Management</h2>
+              <button className="add-btn" onClick={() => setEditingAircraft({})}>
+                + Add Aircraft
+              </button>
+            </div>
+            {/* Add/Edit Aircraft Form */}
+            {editingAircraft ? (
+              <div className="edit-form">
+                <h3>{editingAircraft.id ? "Edit" : "Add"} Aircraft</h3>
+                <div className="form-group">
+                  <label>Model</label>
+                  <input
+                    type="text"
+                    value={editingAircraft.model || ""}
+                    onChange={e =>
+                      setEditingAircraft({ ...editingAircraft, model: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Width (seats per row)</label>
+                    <input
+                      type="number"
+                      value={editingAircraft.width || ""}
+                      onChange={e =>
+                        setEditingAircraft({ ...editingAircraft, width: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Length (number of rows)</label>
+                    <input
+                      type="number"
+                      value={editingAircraft.length || ""}
+                      onChange={e =>
+                        setEditingAircraft({ ...editingAircraft, length: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Seat map editor với box chọn hạng ghế cho từng hàng */}
+                {editingAircraft.width > 0 && editingAircraft.length > 0 && (
+                  <div style={{ margin: "16px 0" }}>
+                    <h4>Seat Map</h4>
+                    <div style={{ marginBottom: 8 }}>
+                      {editingAircraft.seatMap &&
+                        editingAircraft.seatMap.map((row, rowIdx) => (
+                          <div key={rowIdx} style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+                            <span style={{ minWidth: 60, marginRight: 8 }}>Row {rowIdx + 1}</span>
+                            <select
+                              style={{
+                                minWidth: 120,
+                                padding: "4px 8px",
+                                border: "1px solid #ddd",
+                                borderRadius: 4,
+                                fontSize: 13,
+                                marginRight: 12
+                              }}
+                              value={row[0] || "economy"}
+                              onChange={e => handleSetRowClass(rowIdx, e.target.value)}
+                            >
+                              <option value="economy">Economy</option>
+                              <option value="business">Business</option>
+                              <option value="firstClass">First Class</option>
+                            </select>
+                            <div style={{ display: "flex", gap: 2 }}>
+                              {row.map((seat, colIdx) => (
+                                <div
+                                  key={colIdx}
+                                  style={{
+                                    width: 30,
+                                    height: 30,
+                                    border: "1px solid #ccc",
+                                    borderRadius: 4,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: 11,
+                                    background:
+                                      seat === "firstClass"
+                                        ? "#ffd700"
+                                        : seat === "business"
+                                        ? "#90caf9"
+                                        : "#e0e0e0",
+                                    color: "#333",
+                                    cursor: "pointer"
+                                  }}
+                                  title={seat}
+                                  onClick={() => {
+                                    const updatedSeatMap = editingAircraft.seatMap.map((r, rIdx) =>
+                                      r.map((s, cIdx) => {
+                                        if (rIdx === rowIdx && cIdx === colIdx) {
+                                          return s === "economy"
+                                            ? "business"
+                                            : s === "business"
+                                            ? "firstClass"
+                                            : "economy";
+                                        }
+                                        return s;
+                                      })
+                                    );
+                                    setEditingAircraft({
+                                      ...editingAircraft,
+                                      seatMap: updatedSeatMap
+                                    });
+                                  }}
+                                >
+                                  {String.fromCharCode(65 + colIdx)}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
+                      <span style={{ background: "#ffd700", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>First Class</span>
+                      <span style={{ background: "#90caf9", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>Business</span>
+                      <span style={{ background: "#e0e0e0", padding: "2px 8px", borderRadius: 4 }}>Economy</span>
+                    </div>
+                  </div>
+                )}
+                <div className="form-actions">
+                  <button className="cancel-btn" onClick={() => setEditingAircraft(null)}>
+                    Cancel
+                  </button>
+                  <button
+                    className="save-btn"
+                    onClick={() => {
+                      if (editingAircraft.id) {
+                        setAircrafts(aircrafts.map(a =>
+                          a.id === editingAircraft.id ? editingAircraft : a
+                        ));
+                      } else {
+                        setAircrafts([
+                          ...aircrafts,
+                          {
+                            ...editingAircraft,
+                            id: aircrafts.length + 1
+                          }
+                        ]);
+                      }
+                      setEditingAircraft(null);
+                    }}
+                  >
+                    {editingAircraft.id ? "Update" : "Add"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="table-container">
+                  <table className="management-table">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Width</th>
+                        <th>Length</th>
+                        <th>Seat Map</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aircrafts.map(aircraft => (
+                        <tr key={aircraft.id}>
+                          <td>{aircraft.model}</td>
+                          <td>{aircraft.width}</td>
+                          <td>{aircraft.length}</td>
+                          <td>
+                            <button
+                              className="edit-btn"
+                              onClick={() => handleEditSeatMap(aircraft)}
+                            >
+                              Edit Seat Map
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              className="edit-btn"
+                              onClick={() => setEditingAircraft(aircraft)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="delete-btn"
+                              onClick={() => handleDeleteAircraft(aircraft.id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            {/* Seat Map Editor */}
+            {seatMapEdit && (
+              <div className="edit-form">
+                <h3>Edit Seat Map</h3>
+                <div style={{ overflowX: "auto", marginBottom: 16 }}>
+                  <table style={{ borderCollapse: "collapse" }}>
+                    <tbody>
+                      {seatMapEdit.map((row, rowIdx) => (
+                        <tr key={rowIdx}>
+                          {row.map((seat, colIdx) => (
+                            <td key={colIdx} style={{ padding: 2 }}>
+                              <select
+                                value={seat}
+                                onChange={e =>
+                                  handleSeatTypeChange(rowIdx, colIdx, e.target.value)
+                                }
+                                style={{
+                                  background:
+                                    seat === "firstClass"
+                                      ? "#ffd700"
+                                      : seat === "business"
+                                      ? "#90caf9"
+                                      : "#e0e0e0",
+                                  border: "1px solid #bbb",
+                                  borderRadius: 4,
+                                  padding: "2px 6px",
+                                  fontSize: 13,
+                                  minWidth: 80
+                                }}
+                              >
+                                <option value="economy">Economy</option>
+                                <option value="business">Business</option>
+                                <option value="firstClass">First Class</option>
+                              </select>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="form-actions">
+                  <button className="cancel-btn" onClick={() => { setSeatMapEdit(null); setSelectedAircraftId(null); }}>
+                    Cancel
+                  </button>
+                  <button className="save-btn" onClick={handleSaveSeatMap}>
+                    Save Seat Map
+                  </button>
+                </div>
+                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
+                  <span style={{ background: "#ffd700", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>First Class</span>
+                  <span style={{ background: "#90caf9", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>Business</span>
+                  <span style={{ background: "#e0e0e0", padding: "2px 8px", borderRadius: 4 }}>Economy</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
+      {/* Overlay for mobile */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>}
+      
       <style jsx>{`
-        .admin-dashboard {
-          display: flex;
-          min-height: 100vh;
-          font-family: 'Inter', sans-serif;
-          background-color: #f5f7fa;
-        }
-        
-        .admin-sidebar {
-          width: 250px;
-          background: #1a237e;
-          color: white;
-          padding: 20px 0;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .admin-logo {
-          font-size: 22px;
-          font-weight: 700;
-          padding: 0 20px 20px;
-          border-bottom: 1px solid #3949ab;
-          margin-bottom: 20px;
-          cursor: pointer;
-          color: #ffd600;
-        }
-        
-        .admin-menu {
-          flex: 1;
-        }
-        
-        .menu-item {
-          padding: 12px 20px;
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          transition: all 0.2s;
-          border-left: 4px solid transparent;
-        }
-        
-        .menu-item:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .menu-item.active {
-          background: rgba(255, 255, 255, 0.15);
-          border-left: 4px solid #ffd600;
-        }
-        
-        .menu-item .icon {
-          margin-right: 12px;
-          font-size: 18px;
-        }
-        
-        .admin-footer {
-          padding: 20px;
-        }
-        
-        .logout-btn {
-          background: #ffd600;
-          color: #1a237e;
-          border: none;
-          padding: 10px 15px;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .logout-btn .icon {
-          margin-right: 8px;
-        }
-        
-        .admin-content {
-          flex: 1;
-          padding: 20px;
-          overflow-y: auto;
-        }
-        
-        .admin-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .admin-header h1 {
-          font-size: 24px;
-          color: #1a237e;
-          margin: 0;
-        }
-        
-        .admin-info {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        
-        .admin-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #1a237e;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-        }
-        
-        /* Dashboard Styles */
-        .stats-cards {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-        
-        .stat-card {
-          background: white;
-          border-radius: 10px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .stat-value {
-          font-size: 32px;
-          font-weight: 700;
-          color: #1a237e;
-          margin-bottom: 5px;
-        }
-        
-        .stat-label {
-          font-size: 14px;
-          color: #666;
-        }
-        
-        .stat-icon {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          font-size: 30px;
-          opacity: 0.2;
-        }
-        
-        .recent-activities {
-          background: white;
-          border-radius: 10px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        .recent-activities h2 {
-          margin-top: 0;
-          font-size: 20px;
-          color: #1a237e;
-        }
-        
-        .activity-item {
-          display: flex;
-          padding: 15px 0;
-          border-bottom: 1px solid #eee;
-        }
-        
-        .activity-item:last-child {
-          border-bottom: none;
-        }
-        
-        .activity-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #e8eaf6;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 15px;
-          font-size: 18px;
-        }
-        
-        .activity-title {
-          font-weight: 500;
-          margin-bottom: 5px;
-        }
-        
-        .activity-time {
-          font-size: 13px;
-          color: #888;
-        }
-        
-        /* Management Styles */
-        .management-container {
-          background: white;
-          border-radius: 10px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        .management-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-        
-        .add-btn {
-          background: #1a237e;
-          color: white;
-          border: none;
-          padding: 10px 15px;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-        }
-        
-        .edit-form {
-          background: #f9f9f9;
-          padding: 20px;
-          border-radius: 10px;
-          margin-bottom: 20px;
-        }
-        
-        .form-group {
-          margin-bottom: 15px;
-        }
-        
-        .form-group label {
-          display: block;
-          margin-bottom: 5px;
-          font-weight: 500;
-          color: #555;
-        }
-        
-        .form-group input, 
-        .form-group select, 
-        .form-group textarea {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 15px;
-        }
-        
-        .form-row {
-          display: flex;
-          gap: 15px;
-        }
-        
-        .form-row .form-group {
-          flex: 1;
-        }
-        
-        .form-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 10px;
-          margin-top: 20px;
-        }
-        
-        .cancel-btn {
-          background: #f5f5f5;
-          color: #333;
-          border: 1px solid #ddd;
-          padding: 8px 15px;
-          border-radius: 5px;
-          cursor: pointer;
-        }
-        
-        .save-btn {
-          background: #1a237e;
-          color: white;
-          border: none;
-          padding: 8px 20px;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        
-        .management-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        
-        .management-table th {
-          background: #e8eaf6;
-          padding: 12px 15px;
-          text-align: left;
-          font-weight: 600;
-          color: #1a237e;
-          border-bottom: 2px solid #c5cae9;
-        }
-        
-        .management-table td {
-          padding: 12px 15px;
-          border-bottom: 1px solid #eee;
-        }
-        
-        .management-table tr:hover {
-          background: #f9f9f9;
-        }
-        
-        .status-badge {
-          padding: 5px 10px;
-          border-radius: 15px;
-          font-size: 13px;
-          font-weight: 500;
-        }
-        
-        .status-badge.active {
-          background: #e8f5e9;
-          color: #2e7d32;
-        }
-        
-        .status-badge.warning {
-          background: #fff8e1;
-          color: #f57f17;
-        }
-        
-        .status-badge.pending {
-          background: #e3f2fd;
-          color: #1565c0;
-        }
-        
-        .edit-btn, .delete-btn, .view-btn, .confirm-btn {
-          padding: 6px 12px;
-          border-radius: 4px;
-          font-size: 14px;
-          cursor: pointer;
-          margin-right: 5px;
-        }
-        
-        .edit-btn {
-          background: #e3f2fd;
-          color: #1565c0;
-          border: 1px solid #bbdefb;
-        }
-        
-        .delete-btn {
-          background: #ffebee;
-          color: #c62828;
-          border: 1px solid #ffcdd2;
-        }
-        
-        .view-btn {
-          background: #e8f5e9;
-          color: #2e7d32;
-          border: 1px solid #c8e6c9;
-        }
-        
-        .confirm-btn {
-          background: #fff8e1;
-          color: #f57f17;
-          border: 1px solid #ffecb3;
-        }
-        
-        .time-input {
-          padding: 5px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-        }
-        
-        .filter-controls {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        }
-        
-        .filter-controls select, 
-        .filter-controls input {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-        }
-        
-        .filter-btn, .export-btn {
-          background: #1a237e;
-          color: white;
-          border: none;
-          padding: 8px 15px;
-          border-radius: 5px;
-          cursor: pointer;
-        }
-        
-        .stats-summary {
-          display: flex;
-          justify-content: space-around;
-          margin-top: 20px;
-          padding: 15px;
-          background: #f5f5f5;
-          border-radius: 8px;
-        }
-        
-        .stat-item {
-          text-align: center;
-        }
-        
-        .stat-label {
-          font-size: 14px;
-          color: #666;
-        }
-        
-        .stat-value {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1a237e;
-        }
-        
-        /* Announcement Styles */
-        .announcement-form {
-          background: #f9f9f9;
-          padding: 20px;
-          border-radius: 10px;
-          margin-bottom: 30px;
-        }
-        
-        .publish-btn {
-          background: #1a237e;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        
-        .preview-btn {
-          background: #e0e0e0;
-          color: #333;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-right: 10px;
-        }
-        
-        .history-item {
-          background: white;
-          border-radius: 8px;
-          padding: 15px;
-          margin-bottom: 15px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-        
-        .item-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 10px;
-        }
-        
-        .item-title {
-          font-weight: 600;
-        }
-        
-        .item-priority {
-          padding: 3px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .item-priority.normal {
-          background: #e3f2fd;
-          color: #1565c0;
-        }
-        
-        .item-priority.high {
-          background: #fff8e1;
-          color: #f57f17;
-        }
-        
-        .item-content {
-          color: #555;
-          margin-bottom: 10px;
-        }
-        
-        .item-footer {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13px;
-          color: #888;
-        }
-        
-        .item-actions button {
-          background: none;
-          border: none;
-          color: #1a237e;
-          cursor: pointer;
-          margin-left: 10px;
-        }
-        
-        /* Stats Styles */
-        .charts-container {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-        
-        .chart-card {
-          background: white;
-          border-radius: 10px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        .chart-placeholder {
-          height: 250px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-        
-        .bar-chart {
-          display: flex;
-          align-items: flex-end;
-          height: 180px;
-          gap: 20px;
-          margin-bottom: 20px;
-        }
-        
-        .bar {
-          width: 40px;
-          background: #1a237e;
-          position: relative;
-          border-radius: 4px 4px 0 0;
-        }
-        
-        .bar span {
-          position: absolute;
-          bottom: -25px;
-          left: 0;
-          right: 0;
-          text-align: center;
-          font-size: 12px;
-        }
-        
-        .pie-chart {
-          width: 180px;
-          height: 180px;
-          border-radius: 50%;
-          position: relative;
-          background: conic-gradient(
-            #2e7d32 0deg 65%, 
-            #1565c0 65deg 90%, 
-            #6a1b9a 90deg 100%
-          );
-        }
-        
-        .chart-center {
-          position: absolute;
-          width: 90px;
-          height: 90px;
-          background: white;
-          border-radius: 50%;
-          top: 45px;
-          left: 45px;
-        }
-        
-        .chart-legend {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        
-        .legend-color {
-          display: inline-block;
-          width: 12px;
-          height: 12px;
-          border-radius: 2px;
-          margin-right: 5px;
-        }
-        
-        .economy { background: #2e7d32; }
-        .business { background: #1565c0; }
-        .first-class { background: #6a1b9a; }
-        
-        .stats-table {
-          background: white;
-          border-radius: 10px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        .stats-table table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        
-        .stats-table th, .stats-table td {
-          padding: 12px 15px;
-          text-align: left;
-          border-bottom: 1px solid #eee;
-        }
-        
-        .stats-table th {
-          background: #e8eaf6;
-          color: #1a237e;
-          font-weight: 600;
-        }
-        
-        .stats-table tr:hover {
-          background: #f9f9f9;
-        }
-        
-        /* Responsive */
-        @media (max-width: 1200px) {
-          .stats-cards {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          
-          .charts-container {
-            grid-template-columns: 1fr;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .admin-dashboard {
-            flex-direction: column;
-          }
-          
-          .admin-sidebar {
-            width: 100%;
-          }
-          
-          .stats-cards {
-            grid-template-columns: 1fr;
-          }
-          
-          .form-row {
-            flex-direction: column;
-            gap: 0;
-          }
-          
-          .filter-controls {
-            flex-wrap: wrap;
-          }
-        }
-      `}</style>
+  .admin-dashboard {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f7fa;
+    position: relative;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 220px; /* Mặc định mở rộng */
+    background: #1a237e;
+    color: white;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 1000;
+    overflow: hidden;
+  }
+  .admin-sidebar:not(.open) {
+    width: 80px;
+  }
+  .admin-sidebar.open {
+    width: 220px;
+  }
+  .admin-logo {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid #3949ab;
+    margin-bottom: 20px;
+    cursor: pointer;
+    color: #ffd600;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  .admin-sidebar:not(.open) .admin-logo {
+    opacity: 0;
+  }
+  .admin-menu {
+    flex: 1;
+  }
+
+  .menu-item {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+    white-space: nowrap;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .menu-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 4px solid #ffd600;
+  }
+
+  .menu-item .icon {
+    margin-right: 12px;
+    font-size: 18px;
+    min-width: 18px;
+  }
+
+  .menu-item span {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .admin-sidebar:not(.open) .menu-item span {
+    opacity: 0;
+  }
+
+  .admin-footer {
+    padding: 20px;
+  }
+
+  .logout-btn {
+    background: #ffd600;
+    color: #1a237e;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .logout-btn .icon {
+    margin-right: 8px;
+  }
+
+  .logout-btn span {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .admin-sidebar:not(.open) .logout-btn span {
+    opacity: 0;
+  }
+
+  .admin-content {
+    flex: 1;
+    padding: 20px;
+    margin-left: 220px;
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+  }
+  .admin-sidebar:not(.open) ~ .admin-content {
+    margin-left: 80px;
+  }
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .sidebar-toggle {
+    display: block;
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+  .admin-header h1 {
+    font-size: 24px;
+    color: #1a237e;
+    margin: 0;
+  }
+
+  .admin-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1a237e;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+  }
+
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .admin-sidebar {
+      width: 0;
+      transform: translateX(-100%);
+    }
+    
+    .admin-sidebar.open {
+      width: 250px;
+      transform: translateX(0);
+    }
+    
+    .admin-content {
+      margin-left: 0;
+    }
+    
+    .sidebar-toggle {
+      display: block;
+    }
+    
+    .sidebar-overlay {
+      display: block;
+    }
+    
+    .stats-cards {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+    
+    .filter-controls {
+      flex-wrap: wrap;
+    }
+  }
+
+  /* Dashboard Styles */
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a237e;
+    margin-bottom: 5px;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .stat-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 30px;
+    opacity: 0.2;
+  }
+  
+  .recent-activities {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .recent-activities h2 {
+    margin-top: 0;
+    font-size: 20px;
+    color: #1a237e;
+  }
+  
+  .activity-item {
+    display: flex;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  
+  .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e8eaf6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 18px;
+  }
+  
+  .activity-title {
+    font-weight: 500;
+    margin-bottom: 5px;
+  }
+  
+  .activity-time {
+    font-size: 13px;
+    color: #888;
+  }
+  
+  /* Management Styles */
+  .management-container, .announcement-container, .stats-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .add-btn {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  
+  .edit-form {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .form-group input, 
+  .form-group select, 
+  .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .cancel-btn {
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .save-btn {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .management-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+  
+  .management-table th {
+    background: #e8eaf6;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #1a237e;
+    border-bottom: 2px solid #c5cae9;
+  }
+  
+  .management-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .management-table tr:hover {
+    background: #f9f9f9;
+  }
+  
+  .status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  
+  .status-badge.active {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .status-badge.warning {
+    background: #fff8e1;
+    color: #f57f17;
+  }
+  
+  .status-badge.pending {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+  
+  .edit-btn, .delete-btn, .view-btn, .confirm-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+  
+  .edit-btn {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+  }
+  
+  .delete-btn {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+  
+  .view-btn {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .confirm-btn {
+    background: #fff8e1;
+    color: #f57f17;
+    border: 1px solid #ffecb3;
+  }
+  
+  .time-input {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .filter-controls select, 
+  .filter-controls input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .filter-btn, .export-btn {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .stats-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a237e;
+  }
+  
+  /* Announcement Styles */
+  .announcement-form {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+  }
+  
+  .publish-btn {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .preview-btn {
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  .history-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .item-title {
+    font-weight: 600;
+  }
+  
+  .item-priority {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .item-priority.normal {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+  
+  .item-priority.high {
+    background: #fff8e1;
+    color: #f57f17;
+  }
+  
+  .item-content {
+    color: #555;
+    margin-bottom: 10px;
+  }
+  
+  .item-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #888;
+  }
+  
+  .item-actions button {
+    background: none;
+    border: none;
+    color: #1a237e;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  /* Stats Styles */
+  .charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .chart-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .chart-placeholder {
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 180px;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .bar {
+    width: 40px;
+    background: #1a237e;
+    position: relative;
+    border-radius: 4px 4px 0 0;
+  }
+  
+  .bar span {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .pie-chart {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    position: relative;
+    background: conic-gradient(
+      #2e7d32 0deg 65%, 
+      #1565c0 65deg 90%, 
+      #6a1b9a 90deg 100%
+    );
+  }
+  
+  .chart-center {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 50%;
+    top: 45px;
+    left: 45px;
+  }
+  
+  .chart-legend {
+    margin-top: 20px;
+  }
+  
+  .chart-legend div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+  
+  .legend-color.economy {
+    background: #2e7d32;
+  }
+  
+  .legend-color.business {
+    background: #1565c0;
+  }
+  
+  .legend-color.first-class {
+    background: #6a1b9a;
+  }
+  
+  .stats-table {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .stats-table h3 {
+    margin-top: 0;
+    color: #1a237e;
+  }
+  
+  .stats-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .stats-table th {
+    background: #e8eaf6;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #1a237e;
+    border-bottom: 2px solid #c5cae9;
+  }
+  
+  .stats-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .stats-table tr:hover {
+    background: #f9f9f9;
+  }
+`}</style>
     </div>
   );
 };
