@@ -13,7 +13,7 @@ const AdminDashboard = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
       if (mobile && sidebarOpen) {
-        setSidebarOpen(false); // Close sidebar on mobile by default
+        setSidebarOpen(false);
       }
     };
 
@@ -29,67 +29,100 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Tickets state
-  const [tickets, setTickets] = useState([
-    { id: 1, flightNumber: "KET23", passenger: "Nguyen Van A", class: "Economy", price: 220.90, status: "Confirmed" },
-    { id: 2, flightNumber: "KET24", passenger: "Tran Thi B", class: "Business", price: 450.90, status: "Confirmed" },
-    { id: 3, flightNumber: "KET23", passenger: "Le Van C", class: "First Class", price: 880.90, status: "Pending" }
-  ]);
-  
   // Stats state
   const [stats, setStats] = useState({
-    totalFlights: 24,
-    activeAircrafts: 8,
-    ticketsSold: 156,
-    revenue: 45876.50
+    totalFlights: 0,
+    activeAircrafts: 0,
+    ticketsSold: 0,
+    revenue: 0
   });
   
   // Form states
-  const [newFlight, setNewFlight] = useState({
-    flightNumber: "",
-    departure: "",
-    arrival: "",
-    departureTime: "",
-    arrivalTime: "",
-    date: "",
-    aircraftModel: "",
-    economyPrice: "",
-    businessPrice: "",
-    firstClassPrice: "",
-    economySeats: "",
-    businessSeats: "",
-    firstClassSeats: ""
-  });
+  const [editingFlight, setEditingFlight] = useState(null);
+  const [editingAircraft, setEditingAircraft] = useState(null);
   
   const [announcement, setAnnouncement] = useState({
     title: "",
     content: "",
     priority: "Normal"
   });
-  
-  const [editingFlight, setEditingFlight] = useState(null);
 
-  // Aircraft form state
-  const [newAircraft, setNewAircraft] = useState({
-    model: "",
-    width: "",
-    length: ""
-  });
-  const [editingAircraft, setEditingAircraft] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
 
-  // API functions
-  const fetchFlights = async () => {
+  // Hàm lấy region của sân bay
+  const getAirportRegion = (code) => {
+    const airport = airports.find(a => a.code === code);
+    return airport?.region || "Unknown";
+  };
+
+  // Hàm lọc chuyến bay theo ngày
+  const filterByDate = (flight) => {
+    if (!selectedDate) return true;
+    const flightDate = new Date(flight.date).toISOString().slice(0,10);
+    return flightDate === selectedDate;
+  };
+
+  // Debug: Thêm console.log để kiểm tra dữ liệu
+  console.log("All flights count:", flights.length);
+  console.log("Sample flight dates:", flights.slice(0, 5).map(f => ({ 
+    id: f.id, 
+    flightNumber: f.flightNumber,
+    date: f.date,
+    departure: f.departure,
+    arrival: f.arrival
+  })));
+  console.log("Selected date:", selectedDate);
+  console.log("Selected region:", selectedRegion);
+
+  // Chia chuyến bay theo khu vực và bộ lọc
+  const filteredFlights = flights || []; // Ensure flights is always an array
+
+  console.log("=== FILTER RESULTS ===");
+  console.log("Total flights:", flights?.length || 0);
+  console.log("Filtered flights:", filteredFlights.length);
+  console.log("Selected date:", selectedDate);
+  console.log("Selected region:", selectedRegion);
+
+  // Thêm debug để hiểu dữ liệu
+  if (flights && flights.length > 0) {
+    console.log("First flight sample:", {
+      id: flights[0].id,
+      date: flights[0].date,
+      departure: flights[0].departure,
+      arrival: flights[0].arrival
+    });
+  }
+
+  // 👈 CẬP NHẬT: Fetch functions với database thực
+  const fetchFlightsByFilter = async (selectedDate = "", selectedRegion = "all") => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:5000/api/flights');
-      if (!response.ok) throw new Error('Failed to fetch flights');
+      console.log('🔄 Admin: Fetching flights with filters:', { selectedDate, selectedRegion });
+      
+      const params = new URLSearchParams();
+      if (selectedDate && selectedDate.trim() !== '') {
+        params.append('date', selectedDate);
+      }
+      if (selectedRegion && selectedRegion !== 'all') {
+        params.append('region', selectedRegion);
+      }
+      
+      const url = `http://localhost:5000/api/admin/flights/by-date?${params.toString()}`;
+      console.log('📡 Calling:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('✅ Admin: Flights fetched with filters:', data.length);
       setFlights(data);
     } catch (error) {
       setError(error.message);
-      console.error('Error fetching flights:', error);
-      // Set default empty array if API fails
+      console.error('❌ Admin: Error fetching flights:', error);
       setFlights([]);
     } finally {
       setLoading(false);
@@ -98,22 +131,28 @@ const AdminDashboard = () => {
 
   const fetchAirports = async () => {
     try {
+      console.log('🔄 Admin: Fetching airports...');
       const response = await fetch('http://localhost:5000/api/airports');
       if (!response.ok) throw new Error('Failed to fetch airports');
+      
       const data = await response.json();
+      console.log('✅ Admin: Airports fetched:', data.length);
       setAirports(data);
     } catch (error) {
-      console.error('Error fetching airports:', error);
-      // Set default empty array if API fails
+      console.error('❌ Admin: Error fetching airports:', error);
       setAirports([]);
     }
   };
 
   const fetchAircrafts = async () => {
     try {
+      console.log('🔄 Admin: Fetching aircrafts...');
       const response = await fetch('http://localhost:5000/api/aircrafts');
       if (!response.ok) throw new Error('Failed to fetch aircrafts');
+      
       const data = await response.json();
+      console.log('✅ Admin: Aircrafts fetched:', data.length);
+      
       const formattedAircrafts = data.map(aircraft => ({
         ...aircraft,
         width: aircraft.width || 9,
@@ -122,20 +161,37 @@ const AdminDashboard = () => {
       }));
       setAircrafts(formattedAircrafts);
     } catch (error) {
-      console.error('Error fetching aircrafts:', error);
-      // Set default empty array if API fails
+      console.error('❌ Admin: Error fetching aircrafts:', error);
       setAircrafts([]);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      console.log('🔄 Admin: Fetching dashboard stats...');
+      const response = await fetch('http://localhost:5000/api/admin/stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      
+      const data = await response.json();
+      console.log('✅ Admin: Stats fetched:', data);
+      setStats(data);
+    } catch (error) {
+      console.error('❌ Admin: Error fetching stats:', error);
     }
   };
 
   // Load data on component mount
   useEffect(() => {
-    fetchFlights();
     fetchAirports();
     fetchAircrafts();
+    fetchStats();
+    // Fetch flights khi vào dashboard hoặc flights tab
+    if (activeTab === "dashboard" || activeTab === "flights") {
+      fetchFlightsByFilter("", "all");
+    }
   }, []);
 
-  // Handler functions
+  // 👈 CẬP NHẬT: Handler functions với database thực
   const handleAddFlight = async () => {
     if (!editingFlight?.flightNumber || !editingFlight?.departure || !editingFlight?.arrival) {
       alert('Vui lòng điền đầy đủ thông tin chuyến bay');
@@ -144,6 +200,8 @@ const AdminDashboard = () => {
 
     try {
       setLoading(true);
+      console.log('🔄 Admin: Adding flight:', editingFlight);
+      
       const response = await fetch('http://localhost:5000/api/flights', {
         method: 'POST',
         headers: {
@@ -156,7 +214,13 @@ const AdminDashboard = () => {
           departureTime: editingFlight.departureTime,
           arrivalTime: editingFlight.arrivalTime,
           date: editingFlight.date,
-          aircraftModel: editingFlight.aircraftModel
+          aircraftModel: editingFlight.aircraftModel || 'Boeing 737-800',
+          economyPrice: editingFlight.economyPrice || 220.90,
+          businessPrice: editingFlight.businessPrice || 450.90,
+          firstClassPrice: editingFlight.firstClassPrice || 880.90,
+          economySeats: editingFlight.economySeats || 100,
+          businessSeats: editingFlight.businessSeats || 20,
+          firstClassSeats: editingFlight.firstClassSeats || 8
         }),
       });
 
@@ -165,12 +229,16 @@ const AdminDashboard = () => {
         throw new Error(errorData.error || 'Failed to add flight');
       }
 
+      const result = await response.json();
+      console.log('✅ Admin: Flight added successfully:', result);
+      
       alert('Chuyến bay đã được thêm thành công!');
       setEditingFlight(null);
-      fetchFlights();
+      fetchFlightsByFilter(selectedDate, selectedRegion);
+      fetchStats(); // Update stats
     } catch (error) {
       alert(`Lỗi: ${error.message}`);
-      console.error('Error adding flight:', error);
+      console.error('❌ Admin: Error adding flight:', error);
     } finally {
       setLoading(false);
     }
@@ -181,17 +249,102 @@ const AdminDashboard = () => {
 
     try {
       setLoading(true);
+      console.log(`🔄 Admin: Deleting flight ${id}`);
+      
       const response = await fetch(`http://localhost:5000/api/flights/${id}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete flight');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete flight');
+      }
 
+      const result = await response.json();
+      console.log('✅ Admin: Flight deleted successfully:', result);
+      
       alert('Chuyến bay đã được xóa thành công!');
-      fetchFlights();
+      fetchFlightsByFilter(selectedDate, selectedRegion);
+      fetchStats(); // Update stats
     } catch (error) {
       alert(`Lỗi: ${error.message}`);
-      console.error('Error deleting flight:', error);
+      console.error('❌ Admin: Error deleting flight:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddAircraft = async () => {
+    if (!editingAircraft.model || !editingAircraft.width || !editingAircraft.length) {
+      alert('Vui lòng điền đầy đủ thông tin máy bay');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      console.log('🔄 Admin: Adding aircraft:', editingAircraft);
+      
+      const response = await fetch('http://localhost:5000/api/aircrafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: editingAircraft.model,
+          manufacturer: 'Unknown',
+          width: parseInt(editingAircraft.width),
+          length: parseInt(editingAircraft.length),
+          seat_map: editingAircraft.seatMap || Array(parseInt(editingAircraft.length))
+            .fill(0)
+            .map(() => Array(parseInt(editingAircraft.width)).fill("economy"))
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add aircraft');
+      }
+
+      const result = await response.json();
+      console.log('✅ Admin: Aircraft added successfully:', result);
+      
+      alert('Máy bay đã được thêm thành công!');
+      setEditingAircraft(null); // Reset form
+      fetchAircrafts(); // Refresh list
+      fetchStats(); // Update stats
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('❌ Admin: Error adding aircraft:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAircraft = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa máy bay này?")) return;
+
+    try {
+      setLoading(true);
+      console.log(`🔄 Admin: Deleting aircraft ${id}`);
+      
+      const response = await fetch(`http://localhost:5000/api/aircrafts/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete aircraft');
+      }
+
+      const result = await response.json();
+      console.log('✅ Admin: Aircraft deleted successfully:', result);
+      
+      alert('Máy bay đã được xóa thành công!');
+      fetchAircrafts();
+      fetchStats(); // Update stats
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('❌ Admin: Error deleting aircraft:', error);
     } finally {
       setLoading(false);
     }
@@ -209,69 +362,6 @@ const AdminDashboard = () => {
       content: "",
       priority: "Normal"
     });
-  };
-
-  const handleChangeDepartureTime = (id, newTime) => {
-    const updatedFlights = flights.map(flight => {
-      if (flight.id === id) {
-        return {...flight, departureTime: newTime, status: "Schedule Changed"};
-      }
-      return flight;
-    });
-    
-    setFlights(updatedFlights);
-    alert(`Giờ khởi hành đã được cập nhật cho chuyến bay ${id}`);
-  };
-
-  // Thêm máy bay mới (cập nhật để sử dụng API)
-  const handleAddAircraft = async () => {
-    if (!newAircraft.model || !newAircraft.width || !newAircraft.length) return;
-    
-    try {
-      const response = await fetch('http://localhost:5000/api/aircrafts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: newAircraft.model,
-          manufacturer: 'Unknown', // Default value
-          width: parseInt(newAircraft.width),
-          length: parseInt(newAircraft.length),
-          seat_map: Array(parseInt(newAircraft.length))
-            .fill(0)
-            .map(() => Array(parseInt(newAircraft.width)).fill("economy"))
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to add aircraft');
-
-      alert('Máy bay đã được thêm thành công!');
-      setNewAircraft({ model: "", width: "", length: "" });
-      fetchAircrafts(); // Reload aircrafts
-    } catch (error) {
-      alert(`Lỗi: ${error.message}`);
-      console.error('Error adding aircraft:', error);
-    }
-  };
-
-  // Xóa máy bay (cập nhật để sử dụng API)
-  const handleDeleteAircraft = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa máy bay này?")) return;
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/aircrafts/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete aircraft');
-
-      alert('Máy bay đã được xóa thành công!');
-      fetchAircrafts(); // Reload aircrafts
-    } catch (error) {
-      alert(`Lỗi: ${error.message}`);
-      console.error('Error deleting aircraft:', error);
-    }
   };
 
   // Chỉnh sửa sơ đồ ghế
@@ -296,12 +386,43 @@ const AdminDashboard = () => {
     setSeatMapEdit(updated);
   };
 
-  const handleSaveSeatMap = () => {
-    setAircrafts(aircrafts.map(a =>
-      a.id === selectedAircraftId ? { ...a, seatMap: seatMapEdit } : a
-    ));
-    setSelectedAircraftId(null);
-    setSeatMapEdit(null);
+  const handleSaveSeatMap = async () => {
+    try {
+      setLoading(true);
+      console.log(`🔄 Admin: Updating seat map for aircraft ${selectedAircraftId}`);
+      
+      const response = await fetch(`http://localhost:5000/api/aircrafts/${selectedAircraftId}/seatmap`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          seat_map: seatMapEdit
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update seat map');
+      }
+
+      const result = await response.json();
+      console.log('✅ Admin: Seat map updated successfully:', result);
+      
+      // Update local state
+      setAircrafts(aircrafts.map(a =>
+        a.id === selectedAircraftId ? { ...a, seatMap: seatMapEdit } : a
+      ));
+      
+      setSelectedAircraftId(null);
+      setSeatMapEdit(null);
+      alert('Sơ đồ ghế đã được cập nhật thành công!');
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+      console.error('❌ Admin: Error updating seat map:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Định dạng tiền tệ
@@ -321,7 +442,6 @@ const AdminDashboard = () => {
       const width = parseInt(editingAircraft.width) || 0;
       const length = parseInt(editingAircraft.length) || 0;
       if (width > 0 && length > 0) {
-        // Generate new seatMap with default "economy"
         setEditingAircraft(prev => ({
           ...prev,
           seatMap: Array(length)
@@ -352,6 +472,35 @@ const AdminDashboard = () => {
       ...editingAircraft,
       seatMap: updatedSeatMap
     });
+  };
+
+  // 👈 THÊM: useEffect để tự động fetch khi filter thay đổi
+  useEffect(() => {
+    if (activeTab === "flights") {
+      fetchFlightsByFilter(selectedDate, selectedRegion);
+    }
+  }, [selectedDate, selectedRegion, activeTab]);
+
+  // 👈 THÊM: Handler functions cho filters
+  const handleDateChange = (newDate) => {
+    console.log('📅 Date changed to:', newDate);
+    setSelectedDate(newDate);
+  };
+
+  const handleRegionChange = (newRegion) => {
+    console.log('🌍 Region changed to:', newRegion);
+    setSelectedRegion(newRegion);
+  };
+
+  const handleResetFilters = () => {
+    console.log('🔄 Resetting filters');
+    setSelectedDate("");
+    setSelectedRegion("all");
+  };
+
+  // 👈 CẬP NHẬT: Thay thế fetchFlights cũ
+  const fetchFlights = async () => {
+    await fetchFlightsByFilter(selectedDate, selectedRegion);
   };
 
   return (
@@ -392,11 +541,11 @@ const AdminDashboard = () => {
           </div>
           
           <div 
-            className={`menu-item ${activeTab === "tickets" ? "active" : ""}`} 
-            onClick={() => setActiveTab("tickets")}
+            className={`menu-item ${activeTab === "aircrafts" ? "active" : ""}`} 
+            onClick={() => setActiveTab("aircrafts")}
           >
-            <i className="icon">🎫</i> 
-            <span>Ticket Management</span>
+            <i className="icon">🛩️</i> 
+            <span>Aircraft Management</span>
           </div>
           
           <div 
@@ -413,14 +562,6 @@ const AdminDashboard = () => {
           >
             <i className="icon">📈</i> 
             <span>Statistics</span>
-          </div>
-
-          <div 
-            className={`menu-item ${activeTab === "aircrafts" ? "active" : ""}`} 
-            onClick={() => setActiveTab("aircrafts")}
-          >
-            <i className="icon">🛩️</i> 
-            <span>Aircraft Management</span>
           </div>
         </div>
         
@@ -446,10 +587,9 @@ const AdminDashboard = () => {
             <h1>
               {activeTab === "dashboard" && "Dashboard"}
               {activeTab === "flights" && "Flight Management"}
-              {activeTab === "tickets" && "Ticket Management"}
+              {activeTab === "aircrafts" && "Aircraft Management"}
               {activeTab === "announcements" && "Announcements"}
               {activeTab === "stats" && "Statistics"}
-              {activeTab === "aircrafts" && "Aircraft Management"}
             </h1>
           </div>
           <div className="admin-info">
@@ -457,6 +597,10 @@ const AdminDashboard = () => {
             <div className="admin-avatar">QL</div>
           </div>
         </div>
+        
+        {/* Loading/Error States */}
+        {loading && <div className="loading">⏳ Đang xử lý...</div>}
+        {error && <div className="error">❌ Lỗi: {error}</div>}
         
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
@@ -470,47 +614,47 @@ const AdminDashboard = () => {
               
               <div className="stat-card">
                 <div className="stat-value">{stats.activeAircrafts}</div>
-                <div className="stat-label">Máy bay hoạt động</div>
+                <div className="stat-label">Máy bay</div>
                 <div className="stat-icon">🛩️</div>
               </div>
               
               <div className="stat-card">
                 <div className="stat-value">{stats.ticketsSold}</div>
-                <div className="stat-label">Vé đã bán</div>
+                <div className="stat-label">Vé có thể bán</div>
                 <div className="stat-icon">🎫</div>
               </div>
               
               <div className="stat-card">
-                <div className="stat-value">{formatCurrency(stats.revenue)}</div>
-                <div className="stat-label">Doanh thu</div>
+                <div className="stat-value">{formatCurrency(stats.revenue / 1000)}</div>
+                <div className="stat-label">Tiềm năng doanh thu</div>
                 <div className="stat-icon">💰</div>
               </div>
             </div>
             
             <div className="recent-activities">
-              <h2>Hoạt động gần đây</h2>
+              <h2>Hoạt động hệ thống</h2>
               <div className="activity-list">
                 <div className="activity-item">
                   <div className="activity-icon">✈️</div>
                   <div className="activity-details">
-                    <div className="activity-title">Đã thêm chuyến bay mới KET28</div>
-                    <div className="activity-time">10 phút trước</div>
+                    <div className="activity-title">Hệ thống có {flights.length} chuyến bay được quản lý</div>
+                    <div className="activity-time">Cập nhật liên tục</div>
                   </div>
                 </div>
                 
                 <div className="activity-item">
-                  <div className="activity-icon">📢</div>
+                  <div className="activity-icon">🛩️</div>
                   <div className="activity-details">
-                    <div className="activity-title">Đã đăng thông báo giảm giá mùa hè</div>
-                    <div className="activity-time">5 giờ trước</div>
+                    <div className="activity-title">Quản lý {aircrafts.length} loại máy bay</div>
+                    <div className="activity-time">Đồng bộ từ database</div>
                   </div>
                 </div>
                 
                 <div className="activity-item">
-                  <div className="activity-icon">🔄</div>
+                  <div className="activity-icon">🌐</div>
                   <div className="activity-details">
-                    <div className="activity-title">Cập nhật giờ khởi hành chuyến bay KET23</div>
-                    <div className="activity-time">1 ngày trước</div>
+                    <div className="activity-title">Kết nối {airports.length} sân bay toàn cầu</div>
+                    <div className="activity-time">Dữ liệu thời gian thực</div>
                   </div>
                 </div>
               </div>
@@ -521,343 +665,223 @@ const AdminDashboard = () => {
         {/* Flight Management Tab */}
         {activeTab === "flights" && (
           <div className="management-container">
-            <div className="management-header">
-              <h2>Quản lý Chuyến bay</h2>
-              <button 
-                className="add-btn"
-                onClick={() => setEditingFlight({})}
-                disabled={loading}
-              >
-                + Thêm chuyến bay
-              </button>
-            </div>
+            {loading ? (
+              <div className="loading">⏳ Đang tải dữ liệu chuyến bay...</div>
+            ) : (
+              <>
+                <div className="management-header">
+                  <h2>Quản lý Chuyến bay</h2>
+                  <div style={{display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center"}}>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={e => handleDateChange(e.target.value)}
+                      style={{padding: "8px", borderRadius: 6, border: "1px solid #ccc"}}
+                      placeholder="Chọn ngày"
+                      disabled={loading}
+                    />
+                    <select
+                      value={selectedRegion}
+                      onChange={e => handleRegionChange(e.target.value)}
+                      style={{padding: "8px", borderRadius: 6, border: "1px solid #ccc"}}
+                      disabled={loading}
+                    >
+                      <option value="all">Tất cả khu vực</option>
+                      <option value="vietnam">Nội địa Việt Nam</option>
+                      <option value="sea">Đông Nam Á</option>
+                      <option value="asia">Châu Á</option>
+                      <option value="other">Khu vực khác</option>
+                    </select>
+                    <button 
+                      className="edit-btn"
+                      onClick={handleResetFilters}
+                      style={{padding: "8px 12px", whiteSpace: "nowrap"}}
+                      disabled={loading}
+                    >
+                      {loading ? "⏳" : "🔄"} Reset
+                    </button>
+                    <button 
+                      className="add-btn"
+                      onClick={() => setEditingFlight({
+                        flightNumber: "",
+                        departure: "",
+                        arrival: "",
+                        departureTime: "",
+                        arrivalTime: "",
+                        date: "",
+                        aircraftModel: "",
+                        economyPrice: "220.90",
+                        businessPrice: "450.90",
+                        firstClassPrice: "880.90",
+                        economySeats: "100",
+                        businessSeats: "20",
+                        firstClassSeats: "8"
+                      })}
+                      disabled={loading}
+                    >
+                      + Thêm chuyến bay
+                    </button>
+                    
+                    {!loading && (
+                      <span style={{color: "#666", fontSize: "14px", marginLeft: "auto"}}>
+                        {filteredFlights.length} chuyến bay
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-            {loading && <div className="loading">Đang tải...</div>}
-            {error && <div className="error">Lỗi: {error}</div>}
-            
-            <div className="table-container">
-              <table className="management-table">
-                <thead>
-                  <tr>
-                    <th>Số hiệu</th>
-                    <th>Tuyến bay</th>
-                    <th>Máy bay</th>
-                    <th>Giờ bay</th>
-                    <th>Ngày</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {flights.map(flight => (
-                    <tr key={flight.id}>
-                      <td>{flight.flightNumber}</td>
-                      <td>{flight.departure} → {flight.arrival}</td>
-                      <td>{flight.aircraftModel}</td>
-                      <td>{flight.departureTime}</td>
-                      <td>{flight.date}</td>
-                      <td>
-                        <span className={`status-badge ${flight.status === "On Time" ? "active" : "warning"}`}>
-                          {flight.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button 
-                          className="delete-btn"
-                          onClick={() => handleDeleteFlight(flight.id)}
-                          disabled={loading}
+                {/* Add Flight Form */}
+                {editingFlight && (
+                  <div className="edit-form">
+                    <h3>Thêm chuyến bay mới</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Số hiệu chuyến bay *</label>
+                        <input
+                          type="text"
+                          value={editingFlight.flightNumber}
+                          onChange={e => setEditingFlight({...editingFlight, flightNumber: e.target.value})}
+                          placeholder="VJ101"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Ngày bay *</label>
+                        <input
+                          type="date"
+                          value={editingFlight.date}
+                          onChange={e => setEditingFlight({...editingFlight, date: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Sân bay đi *</label>
+                        <select
+                          value={editingFlight.departure}
+                          onChange={e => setEditingFlight({...editingFlight, departure: e.target.value})}
                         >
-                          Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-        
-        {/* Ticket Management Tab */}
-        {activeTab === "tickets" && (
-          <div className="management-container">
-            <div className="management-header">
-              <h2>Quản lý Vé đặt</h2>
-              <div className="filter-controls">
-                <select>
-                  <option>Tất cả chuyến bay</option>
-                  {flights.map(flight => (
-                    <option key={flight.id}>{flight.flightNumber}</option>
-                  ))}
-                </select>
-                <select>
-                  <option>Tất cả trạng thái</option>
-                  <option>Đã xác nhận</option>
-                  <option>Chờ thanh toán</option>
-                  <option>Đã hủy</option>
-                </select>
-                <input type="date" placeholder="Từ ngày" />
-                <input type="date" placeholder="Đến ngày" />
-                <button className="filter-btn">Lọc</button>
-              </div>
-            </div>
-            
-            <div className="table-container">
-              <table className="management-table">
-                <thead>
-                  <tr>
-                    <th>Mã vé</th>
-                    <th>Chuyến bay</th>
-                    <th>Hành khách</th>
-                    <th>Hạng vé</th>
-                    <th>Giá vé</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickets.map(ticket => (
-                    <tr key={ticket.id}>
-                      <td>TK{ticket.id.toString().padStart(4, '0')}</td>
-                      <td>{ticket.flightNumber}</td>
-                      <td>{ticket.passenger}</td>
-                      <td>{ticket.class}</td>
-                      <td>{formatCurrency(ticket.price)}</td>
-                      <td>
-                        <span className={`status-badge ${ticket.status === "Confirmed" ? "active" : "pending"}`}>
-                          {ticket.status === "Confirmed" ? "Đã xác nhận" : "Chờ thanh toán"}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="view-btn">Xem chi tiết</button>
-                        {ticket.status !== "Confirmed" && (
-                          <button className="confirm-btn">Xác nhận</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="stats-summary">
-              <div className="stat-item">
-                <span className="stat-label">Tổng số vé:</span>
-                <span className="stat-value">{tickets.length}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Tổng doanh thu:</span>
-                <span className="stat-value">{formatCurrency(tickets.reduce((sum, ticket) => sum + ticket.price, 0))}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Vé đã xác nhận:</span>
-                <span className="stat-value">{tickets.filter(t => t.status === "Confirmed").length}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Vé chờ xử lý:</span>
-                <span className="stat-value">{tickets.filter(t => t.status !== "Confirmed").length}</span>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Announcements Tab */}
-        {activeTab === "announcements" && (
-          <div className="announcement-container">
-            <h2>Đăng thông tin mới</h2>
-            
-            <div className="announcement-form">
-              <div className="form-group">
-                <label>Tiêu đề</label>
-                <input 
-                  type="text" 
-                  value={announcement.title}
-                  onChange={(e) => setAnnouncement({...announcement, title: e.target.value})}
-                  placeholder="Nhập tiêu đề thông báo"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Mức độ ưu tiên</label>
-                <select 
-                  value={announcement.priority}
-                  onChange={(e) => setAnnouncement({...announcement, priority: e.target.value})}
-                >
-                  <option value="Normal">Bình thường</option>
-                  <option value="High">Quan trọng</option>
-                  <option value="Urgent">Khẩn cấp</option>
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Nội dung</label>
-                <textarea 
-                  rows="6"
-                  value={announcement.content}
-                  onChange={(e) => setAnnouncement({...announcement, content: e.target.value})}
-                  placeholder="Nhập nội dung thông báo..."
-                ></textarea>
-              </div>
-              
-              <div className="form-actions">
-                <button className="preview-btn">Xem trước</button>
-                <button 
-                  className="publish-btn"
-                  onClick={handlePostAnnouncement}
-                >
-                  Đăng thông báo
-                </button>
-              </div>
-            </div>
-            
-            <div className="announcement-history">
-              <h3>Lịch sử thông báo</h3>
-              <div className="history-list">
-                <div className="history-item">
-                  <div className="item-header">
-                    <span className="item-title">Giảm giá 20% vé mùa hè</span>
-                    <span className="item-priority normal">Bình thường</span>
-                  </div>
-                  <div className="item-content">
-                    Chương trình khuyến mãi lớn nhất mùa hè, giảm 20% tất cả các chuyến bay đến Đà Nẵng, Nha Trang, Phú Quốc...
-                  </div>
-                  <div className="item-footer">
-                    <span>Đăng ngày: 05/07/2025</span>
-                    <div className="item-actions">
-                      <button>Sửa</button>
-                      <button>Xóa</button>
+                          <option value="">Chọn sân bay đi</option>
+                          {airports.map(airport => (
+                            <option key={airport.id} value={airport.code}>
+                              {airport.code} - {airport.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Sân bay đến *</label>
+                        <select
+                          value={editingFlight.arrival}
+                          onChange={e => setEditingFlight({...editingFlight, arrival: e.target.value})}
+                        >
+                          <option value="">Chọn sân bay đến</option>
+                          {airports.map(airport => (
+                            <option key={airport.id} value={airport.code}>
+                              {airport.code} - {airport.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Giờ khởi hành *</label>
+                        <input
+                          type="time"
+                          value={editingFlight.departureTime}
+                          onChange={e => setEditingFlight({...editingFlight, departureTime: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Giờ đến *</label>
+                        <input
+                          type="time"
+                          value={editingFlight.arrivalTime}
+                          onChange={e => setEditingFlight({...editingFlight, arrivalTime: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Máy bay</label>
+                      <select
+                        value={editingFlight.aircraftModel}
+                        onChange={e => setEditingFlight({...editingFlight, aircraftModel: e.target.value})}
+                      >
+                        <option value="">Chọn máy bay</option>
+                        {aircrafts.map(aircraft => (
+                          <option key={aircraft.id} value={aircraft.model}>
+                            {aircraft.model}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button className="cancel-btn" onClick={() => setEditingFlight(null)}>
+                        Hủy
+                      </button>
+                      <button
+                        className="save-btn"
+                        onClick={handleAddFlight}
+                        disabled={loading}
+                      >
+                        Thêm chuyến bay
+                      </button>
                     </div>
                   </div>
-                </div>
-                
-                <div className="history-item">
-                  <div className="item-header">
-                    <span className="item-title">Thay đổi lịch bay tháng 7</span>
-                    <span className="item-priority high">Quan trọng</span>
-                  </div>
-                  <div className="item-content">
-                    Do ảnh hưởng của thời tiết, một số chuyến bay trong tháng 7 sẽ được điều chỉnh lịch trình...
-                  </div>
-                  <div className="item-footer">
-                    <span>Đăng ngày: 01/07/2025</span>
-                    <div className="item-actions">
-                      <button>Sửa</button>
-                      <button>Xóa</button>
+                )}
+
+                {/* Flight Table */}
+                <div className="table-container">
+                  <table className="management-table">
+                    <thead>
+                      <tr>
+                        <th>Số hiệu</th>
+                        <th>Tuyến bay</th>
+                        <th>Máy bay</th>
+                        <th>Giờ bay</th>
+                        <th>Ngày</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFlights.map(flight => (
+                        <tr key={flight.id}>
+                          <td>{flight.flightNumber}</td>
+                          <td>{flight.departure} → {flight.arrival}</td>
+                          <td>{flight.aircraftModel}</td>
+                          <td>{flight.departureTime}</td>
+                          <td>{new Date(flight.date).toLocaleDateString('vi-VN')}</td>
+                          <td>
+                            <span className={`status-badge ${flight.status === "On Time" ? "active" : "warning"}`}>
+                              {flight.status || "On Time"}
+                            </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="delete-btn"
+                              onClick={() => handleDeleteFlight(flight.id)}
+                              disabled={loading}
+                            >
+                              Xóa
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredFlights.length === 0 && !loading && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                      Không có chuyến bay nào. Hãy thêm chuyến bay mới hoặc thử lại sau.
                     </div>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Statistics Tab */}
-        {activeTab === "stats" && (
-          <div className="stats-container">
-            <div className="stats-filters">
-              <h2>Thống kê & Báo cáo</h2>
-              <div className="filter-controls">
-                <select>
-                  <option>Tháng 7/2025</option>
-                  <option>Tháng 6/2025</option>
-                  <option>Tháng 5/2025</option>
-                </select>
-                <select>
-                  <option>Tất cả tuyến bay</option>
-                  <option>HAN - ICN</option>
-                  <option>SGN - ICN</option>
-                  <option>HAN - NRT</option>
-                </select>
-                <button className="export-btn">Xuất báo cáo</button>
-              </div>
-            </div>
-            
-            <div className="charts-container">
-              <div className="chart-card">
-                <h3>Doanh thu theo tháng (triệu VND)</h3>
-                <div className="chart-placeholder">
-                  <div className="bar-chart">
-                    <div className="bar" style={{ height: '80%' }}><span>45.8</span></div>
-                    <div className="bar" style={{ height: '65%' }}><span>37.2</span></div>
-                    <div className="bar" style={{ height: '90%' }}><span>51.6</span></div>
-                    <div className="bar" style={{ height: '75%' }}><span>42.9</span></div>
-                    <div className="bar" style={{ height: '60%' }}><span>34.5</span></div>
-                    <div className="bar" style={{ height: '95%' }}><span>54.3</span></div>
-                  </div>
-                  <div className="chart-labels">
-                    <span>Tháng 1</span>
-                    <span>Tháng 2</span>
-                    <span>Tháng 3</span>
-                    <span>Tháng 4</span>
-                    <span>Tháng 5</span>
-                    <span>Tháng 6</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="chart-card">
-                <h3>Phân bố hạng vé</h3>
-                <div className="chart-placeholder">
-                  <div className="pie-chart">
-                    <div className="slice economy" style={{ '--value': 65 }}></div>
-                    <div className="slice business" style={{ '--value': 25 }}></div>
-                    <div className="slice first-class" style={{ '--value': 10 }}></div>
-                    <div className="chart-center"></div>
-                  </div>
-                  <div className="chart-legend">
-                    <div><span className="legend-color economy"></span> Economy (65%)</div>
-                    <div><span className="legend-color business"></span> Business (25%)</div>
-                    <div><span className="legend-color first-class"></span> First Class (10%)</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="stats-table">
-              <h3>Top 5 chuyến bay phổ biến</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Tuyến bay</th>
-                    <th>Số vé bán</th>
-                    <th>Doanh thu</th>
-                    <th>Tỷ lệ lấp đầy</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>HAN - ICN</td>
-                    <td>85</td>
-                    <td>{formatCurrency(25800)}</td>
-                    <td>92%</td>
-                  </tr>
-                  <tr>
-                    <td>SGN - ICN</td>
-                    <td>72</td>
-                    <td>{formatCurrency(21800)}</td>
-                    <td>88%</td>
-                  </tr>
-                  <tr>
-                    <td>HAN - NRT</td>
-                    <td>68</td>
-                    <td>{formatCurrency(19500)}</td>
-                    <td>85%</td>
-                  </tr>
-                  <tr>
-                    <td>HAN - SIN</td>
-                    <td>54</td>
-                    <td>{formatCurrency(16200)}</td>
-                    <td>78%</td>
-                  </tr>
-                  <tr>
-                    <td>DAD - ICN</td>
-                    <td>42</td>
-                    <td>{formatCurrency(12800)}</td>
-                    <td>75%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              </>
+            )}
           </div>
         )}
         
@@ -865,30 +889,42 @@ const AdminDashboard = () => {
         {activeTab === "aircrafts" && (
           <div className="management-container">
             <div className="management-header">
-              <h2>Aircraft Management</h2>
-              <button className="add-btn" onClick={() => setEditingAircraft({})}>
-                + Add Aircraft
+              <h2>Quản lý Máy bay</h2>
+              <button 
+                className="add-btn" 
+                onClick={() => setEditingAircraft({
+                  model: "",
+                  width: "",
+                  length: ""
+                })}
+                disabled={loading}
+              >
+                + Thêm máy bay
               </button>
             </div>
+            
             {/* Add/Edit Aircraft Form */}
-            {editingAircraft ? (
+            {editingAircraft && (
               <div className="edit-form">
-                <h3>{editingAircraft.id ? "Edit" : "Add"} Aircraft</h3>
+                <h3>{editingAircraft.id ? "Chỉnh sửa" : "Thêm"} máy bay</h3>
                 <div className="form-group">
-                  <label>Model</label>
+                  <label>Model máy bay *</label>
                   <input
                     type="text"
                     value={editingAircraft.model || ""}
                     onChange={e =>
                       setEditingAircraft({ ...editingAircraft, model: e.target.value })
                     }
+                    placeholder="Boeing 737-800"
                   />
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Width (seats per row)</label>
+                    <label>Số ghế mỗi hàng *</label>
                     <input
                       type="number"
+                      min="3"
+                      max="12"
                       value={editingAircraft.width || ""}
                       onChange={e =>
                         setEditingAircraft({ ...editingAircraft, width: e.target.value })
@@ -896,9 +932,11 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Length (number of rows)</label>
+                    <label>Số hàng ghế *</label>
                     <input
                       type="number"
+                      min="10"
+                      max="60"
                       value={editingAircraft.length || ""}
                       onChange={e =>
                         setEditingAircraft({ ...editingAircraft, length: e.target.value })
@@ -906,15 +944,16 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
-                {/* Seat map editor với box chọn hạng ghế cho từng hàng */}
+                
+                {/* Seat map preview */}
                 {editingAircraft.width > 0 && editingAircraft.length > 0 && (
                   <div style={{ margin: "16px 0" }}>
-                    <h4>Seat Map</h4>
+                    <h4>Sơ đồ ghế</h4>
                     <div style={{ marginBottom: 8 }}>
                       {editingAircraft.seatMap &&
-                        editingAircraft.seatMap.map((row, rowIdx) => (
+                        editingAircraft.seatMap.slice(0, 5).map((row, rowIdx) => (
                           <div key={rowIdx} style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-                            <span style={{ minWidth: 60, marginRight: 8 }}>Row {rowIdx + 1}</span>
+                            <span style={{ minWidth: 60, marginRight: 8, fontSize: 12 }}>Hàng {rowIdx + 1}</span>
                             <select
                               style={{
                                 minWidth: 120,
@@ -936,42 +975,23 @@ const AdminDashboard = () => {
                                 <div
                                   key={colIdx}
                                   style={{
-                                    width: 30,
-                                    height: 30,
+                                    width: 24,
+                                    height: 24,
                                     border: "1px solid #ccc",
-                                    borderRadius: 4,
+                                    borderRadius: 3,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     background:
                                       seat === "firstClass"
                                         ? "#ffd700"
                                         : seat === "business"
                                         ? "#90caf9"
                                         : "#e0e0e0",
-                                    color: "#333",
-                                    cursor: "pointer"
+                                    color: "#333"
                                   }}
                                   title={seat}
-                                  onClick={() => {
-                                    const updatedSeatMap = editingAircraft.seatMap.map((r, rIdx) =>
-                                      r.map((s, cIdx) => {
-                                        if (rIdx === rowIdx && cIdx === colIdx) {
-                                          return s === "economy"
-                                            ? "business"
-                                            : s === "business"
-                                            ? "firstClass"
-                                            : "economy";
-                                        }
-                                        return s;
-                                      })
-                                    );
-                                    setEditingAircraft({
-                                      ...editingAircraft,
-                                      seatMap: updatedSeatMap
-                                    });
-                                  }}
                                 >
                                   {String.fromCharCode(65 + colIdx)}
                                 </div>
@@ -980,88 +1000,77 @@ const AdminDashboard = () => {
                           </div>
                         ))}
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
-                      <span style={{ background: "#ffd700", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>First Class</span>
-                      <span style={{ background: "#90caf9", padding: "2px 8px", borderRadius: 4, marginRight: 8 }}>Business</span>
-                      <span style={{ background: "#e0e0e0", padding: "2px 8px", borderRadius: 4 }}>Economy</span>
-                    </div>
                   </div>
                 )}
+                
                 <div className="form-actions">
                   <button className="cancel-btn" onClick={() => setEditingAircraft(null)}>
-                    Cancel
+                    Hủy
                   </button>
                   <button
                     className="save-btn"
                     onClick={() => {
                       if (editingAircraft.id) {
-                        setAircrafts(aircrafts.map(a =>
-                          a.id === editingAircraft.id ? editingAircraft : a
-                        ));
+                        // Edit existing aircraft - chưa implement
+                        alert('Chức năng chỉnh sửa máy bay chưa được triển khai');
                       } else {
-                        setAircrafts([
-                          ...aircrafts,
-                          {
-                            ...editingAircraft,
-                            id: aircrafts.length + 1
-                          }
-                        ]);
+                        // Add new aircraft
+                        handleAddAircraft();
                       }
-                      setEditingAircraft(null);
                     }}
+                    disabled={loading}
                   >
-                    {editingAircraft.id ? "Update" : "Add"}
+                    {editingAircraft.id ? "Cập nhật" : "Thêm"}
                   </button>
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="table-container">
-                  <table className="management-table">
-                    <thead>
-                      <tr>
-                        <th>Model</th>
-                        <th>Width</th>
-                        <th>Length</th>
-                        <th>Seat Map</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {aircrafts.map(aircraft => (
-                        <tr key={aircraft.id}>
-                          <td>{aircraft.model}</td>
-                          <td>{aircraft.width}</td>
-                          <td>{aircraft.length}</td>
-                          <td>
-                            <button
-                              className="edit-btn"
-                              onClick={() => handleEditSeatMap(aircraft)}
-                            >
-                              Edit Seat Map
-                            </button>
-                          </td>
-                          <td>
-                            <button
-                              className="edit-btn"
-                              onClick={() => setEditingAircraft(aircraft)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="delete-btn"
-                              onClick={() => handleDeleteAircraft(aircraft.id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
             )}
+            
+            <div className="table-container">
+              <table className="management-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Width</th>
+                    <th>Length</th>
+                    <th>Seat Map</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aircrafts.map(aircraft => (
+                    <tr key={aircraft.id}>
+                      <td>{aircraft.model}</td>
+                      <td>{aircraft.width}</td>
+                      <td>{aircraft.length}</td>
+                      <td>
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditSeatMap(aircraft)}
+                        >
+                          Edit Seat Map
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          className="edit-btn"
+                          onClick={() => setEditingAircraft(aircraft)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteAircraft(aircraft.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
             {/* Seat Map Editor */}
             {seatMapEdit && (
               <div className="edit-form">
