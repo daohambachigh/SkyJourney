@@ -767,7 +767,7 @@ const Landingpage = () => {
         </div>
       </div>
 
-      {/* 👈 GIỮ NGUYÊN: All existing styles */}
+      {/* All existing styles */}
       <style>{`
         .hero-bg {
           position: absolute;

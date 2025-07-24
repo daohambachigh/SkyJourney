@@ -134,7 +134,6 @@ const AdminDashboard = () => {
       console.log('🔄 Admin: Fetching airports...');
       const response = await fetch('http://localhost:5000/api/airports');
       if (!response.ok) throw new Error('Failed to fetch airports');
-      
       const data = await response.json();
       console.log('✅ Admin: Airports fetched:', data.length);
       setAirports(data);
